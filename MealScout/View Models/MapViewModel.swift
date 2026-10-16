@@ -84,37 +84,29 @@ class MapViewModel {
                 if let category = item.pointOfInterestCategory, FetchMapItem.foodCategories.contains(category) {
                     // Is a restaurant, support usage as a location or open the restaurant
                     alertItem = AlertItem(
-                        title: <#T##String#>,
-                        message: String
-                        
-                        
+                        title: "Use restaurant or location",
+                        message: "Would you like to use \(item.name ?? "Unknown place") as a restaurant or a location basis?",
+                        delegate: { self.mapItem = item },
+                        cancelDelegate: { self.targetLocation = item.location },
+                        okLabel: "Restaurant",
+                        cancelLabel: "Location"
                     )
                 } else {
                     alertItem = AlertItem(
-                        title: "Add location",
+                        title: "Use location",
                         message: "Would you like to use \(item.name ?? "Unknown place") as the target location?",
                         delegate: { self.targetLocation = item.location },
                         cancelDelegate: { }
                     )
                 }
-                guard let category = item.pointOfInterestCategory else {
-                    print("NO CATEGORY!!")
-                    alertItem = AlertItem(
-                        title: "Category invalid",
-                        message: "\(item.name ?? "Unknown place") does not have a valid category"
-                    )
-                    return
-                }
-
-                guard FetchMapItem.foodCategories.contains(category) else {
-                    print("WRONG CATEGORY!")
-                    alertItem = AlertItem(
-                        title: "Category invalid",
-                        message: "\(item.name ?? "Unknown place") is not a restaurant"
-                    )
-                    return
-                }
-                self.mapItem = item
+//                guard let category = item.pointOfInterestCategory else {
+//                    print("NO CATEGORY!!")
+//                    alertItem = AlertItem(
+//                        title: "Category invalid",
+//                        message: "\(item.name ?? "Unknown place") does not have a valid category"
+//                    )
+//                    return
+//                }
             }
         }
         
