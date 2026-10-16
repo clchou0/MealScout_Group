@@ -19,18 +19,18 @@ class FetchRestaurantDetailsUseCase {
         self.restaurantRepository = restaurantRepository
     }
     
-    func fetchReviewsFromRestaurant(mapIdentifier: MapIdentifier) -> [Review] {
+    func fetchReviewsFromRestaurant(mapIdentifier: MapIdentifier) async -> [Review] {
         do {
-            return try reviewRepository.getReviewsForRestaurant(mapIdentifier: mapIdentifier)
+            return try await reviewRepository.getReviewsForRestaurant(mapIdentifier: mapIdentifier)
         } catch {
             print("\(error.localizedDescription)")
         }
         return []
     }
     
-    func fetchTagsFromRestaurant(mapIdentifier: MapIdentifier) -> [CuisineTag] {
+    func fetchTagsFromRestaurant(mapIdentifier: MapIdentifier) async -> [CuisineTag] {
         do {
-            return try restaurantRepository.getTagsForRestaurant(id: mapIdentifier)
+            return try await restaurantRepository.getTagsForRestaurant(id: mapIdentifier)
         }
         catch { print("\(error.localizedDescription)") }
         return []

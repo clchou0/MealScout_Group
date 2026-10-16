@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		209883BA30819C03006F65F7 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 209883B930819C03006F65F7 /* FirebaseFirestore */; };
 		20A77BAF3075FB72008F284D /* AppleMapsShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 20A77BA53075FB71008F284D /* AppleMapsShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		20C2A69F306A15C500F9AE76 /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 20C2A69D306A15C500F9AE76 /* DataModel.xcdatamodeld */; };
 /* End PBXBuildFile section */
@@ -115,6 +116,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				209883BA30819C03006F65F7 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +137,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		209883B830819BF2006F65F7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		20C2A5C03062A9A000F9AE76 = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +152,7 @@
 				20C2A5DE3062A9A200F9AE76 /* MealScoutTests */,
 				20C2A5E83062A9A200F9AE76 /* MealScoutUITests */,
 				20A77BA63075FB71008F284D /* AppleMapsShare */,
+				209883B830819BF2006F65F7 /* Frameworks */,
 				20C2A5CA3062A9A000F9AE76 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -202,6 +212,7 @@
 			);
 			name = MealScout;
 			packageProductDependencies = (
+				209883B930819C03006F65F7 /* FirebaseFirestore */,
 			);
 			productName = MealScout;
 			productReference = 20C2A5C93062A9A000F9AE76 /* MealScout.app */;
@@ -288,6 +299,9 @@
 			);
 			mainGroup = 20C2A5C03062A9A000F9AE76;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 20C2A5CA3062A9A000F9AE76 /* Products */;
 			projectDirPath = "";
@@ -755,6 +769,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		209883B930819C03006F65F7 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		20C2A69D306A15C500F9AE76 /* DataModel.xcdatamodeld */ = {

@@ -28,10 +28,10 @@ struct MapView: View {
             }
         }
         .onAppear() {
-            viewModel.reloadAllReviews()
-            print("Reviews: \(viewModel.allReviews.count)")
-            viewModel.reloadFilteredRestaurants()
-            Task { await viewModel.checkForSharedPlace() }
+            Task {
+                await viewModel.checkForSharedPlace()
+                await viewModel.reloadFilteredRestaurants()
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             Task {
@@ -45,7 +45,9 @@ struct MapView: View {
         .onChange(of: viewModel.presentFilterSheet) { _, newValue in
             // Detect if the filter sheet has been collapsed
             if !newValue {
-                viewModel.reloadFilteredRestaurants()
+                Task {
+                    await viewModel.reloadFilteredRestaurants()
+                }
                 print("restaurants loaded: \(viewModel.filteredRestaurants.count)")
             }
         }

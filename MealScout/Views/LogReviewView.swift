@@ -12,10 +12,11 @@ struct LogReviewView: View {
     @State var viewModel: LogReviewViewModel
     @Environment(\.dismiss) private var dismiss
     
-    init(restaurantIdentifier: MapIdentifier, restaurantName: String) {
+    init(restaurantIdentifier: MapIdentifier, restaurantName: String, lat: Double, lng: Double) {
         self.viewModel = LogReviewViewModel(
             restaurantIdentifier: restaurantIdentifier,
-            restaurantName: restaurantName
+            restaurantName: restaurantName,
+            lat: lat, lng: lng
         )
     }
     
@@ -113,7 +114,9 @@ struct LogReviewView: View {
             .formStyle(.automatic)
             
             Button("Submit Review") {
-                viewModel.submitReview { dismiss() }
+                Task {
+                    await viewModel.submitReview { dismiss() }
+                }
             }
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.roundedRectangle(radius: 10))
@@ -272,5 +275,5 @@ struct DishRow: View {
 }
 
 #Preview {
-    LogReviewView(restaurantIdentifier: MKMapItem.Identifier(rawValue: "I7C6B3D9E2F1A4A0B")!, restaurantName: "Kaijiken")
+    LogReviewView(restaurantIdentifier: MKMapItem.Identifier(rawValue: "I7C6B3D9E2F1A4A0B")!, restaurantName: "Kaijiken", lat: -33.8664317, lng: 151.2073092)
 }

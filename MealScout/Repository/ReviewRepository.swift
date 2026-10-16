@@ -7,13 +7,14 @@
 
 // File: CoreDataReviewRepository.swift
 import CoreData
+import FirebaseFirestore
 
 // @MainActor
 protocol ReviewRepository {
-    func fetchAll() throws -> [Review]
-    func save(_ review: Review) throws
-    func delete(id: UUID) throws
-    func getReviewsForRestaurant(mapIdentifier: MapIdentifier) throws -> [Review]
+    func fetchAll() async throws -> [Review]
+    func save(_ review: Review) async throws
+    func delete(id: UUID) async throws
+    func getReviewsForRestaurant(mapIdentifier: MapIdentifier) async throws -> [Review]
 }
 
 // @MainActor
@@ -72,4 +73,43 @@ final class CoreDataReviewRepository: ReviewRepository {
     func getReviewsForRestaurant(mapIdentifier: MapIdentifier) throws -> [Review] {
         return try fetchAll().filter { $0.restaurant.id == mapIdentifier }
     }
+}
+
+final class FirebaseReviewRepository: ReviewRepository {
+    private let db = Firestore.firestore()
+    private let collectionRef = Firestore.firestore().collection("reviews")
+    
+    func fetchAll() async throws -> [Review] {
+        let snapshot = try await collectionRef
+            .order(by: "id")
+            .getDocuments()
+            
+        return snapshot.documents.compactMap { doc in
+            try? doc.data(as: Review.self)
+        }
+    }
+    
+    func save(_ review: Review) async throws {
+        try collectionRef
+            .document(review.id.uuidString)
+            .setData(from: review, merge: true)
+    }
+    
+    func delete(id: UUID) async throws {
+        try await collectionRef
+            .document(id.uuidString)
+            .delete()
+    }
+    
+    func getReviewsForRestaurant(mapIdentifier: MapIdentifier) async throws -> [Review] {
+        let snapshot = try await collectionRef
+            .whereField("restaurantID", isEqualTo: mapIdentifier)
+            .getDocuments()
+            
+        return snapshot.documents.compactMap { doc in
+            try? doc.data(as: Review.self)
+        }
+    }
+    
+    
 }

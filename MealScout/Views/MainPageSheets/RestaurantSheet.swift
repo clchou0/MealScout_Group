@@ -24,7 +24,6 @@ struct RestaurantSheet: View {
                 
                 Divider()
 
-                // 📜 2. SCROLLABLE REVIEWS LIST (Only this scrolls)
                 List {
                     Section {
                         if viewModel.reviews.isEmpty {
@@ -40,16 +39,22 @@ struct RestaurantSheet: View {
                 // .listStyle(.grouped)
             }
             .navigationDestination(for: MKMapItem.self) { item in
-                if let name = item.name, let identifier = item.identifier {
+                if let name = item.name,
+                    let identifier = item.identifier
+                {
                     LogReviewView(
                         restaurantIdentifier: identifier,
-                        restaurantName: name
+                        restaurantName: name,
+                        lat: item.location.coordinate.latitude,
+                        lng: item.location.coordinate.longitude
                     )
                 }
             }
             .onAppear {
-                viewModel.loadReviews()
-                viewModel.loadTags()
+                Task {
+                    await viewModel.loadReviews()
+                    await viewModel.loadTags()
+                }
             }
         }
     }

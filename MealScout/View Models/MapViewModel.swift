@@ -25,8 +25,9 @@ class MapViewModel {
     var filter = FilterObject()
     let useCase = FilterReviewsUseCase()
     var filteredRestaurants: [Restaurant] = []
-    var allReviews: [Review] = []
     var alertItem: AlertItem? = nil
+    
+    var targetLocation: CLLocation? = nil
     
     init() {
         
@@ -45,19 +46,13 @@ class MapViewModel {
     
     func handleChangeMapItem(mapItem: MKMapItem) {
         print("\(mapItem.name ?? "unknown"): \(mapItem.identifier?.rawValue ?? "unknown")")
+        let coord = mapItem.location.coordinate
+        print("LAT: \(coord.latitude), LNG: \(coord.longitude)")
         presentRestaurantSheet = true
     }
     
-    func reloadAllReviews() {
-        do {
-            try allReviews = useCase.fetchAllReviews()
-        } catch {
-            print(error)
-        }
-    }
-    
-    func reloadFilteredRestaurants() {
-        let result = useCase.execute(allReviews: allReviews, filter: filter)
+    func reloadFilteredRestaurants() async {
+        let result = await useCase.execute(filter: filter)
         switch result {
             case .success(let restaurants): filteredRestaurants = restaurants
             case .failure(let error): print(error)
@@ -85,6 +80,23 @@ class MapViewModel {
         Task {
             if let item = await FetchMapItem.getByString(from: id) {
                 print("GOT ITEM!!: \(item.name ?? "Unknown")")
+                
+                if let category = item.pointOfInterestCategory, FetchMapItem.foodCategories.contains(category) {
+                    // Is a restaurant, support usage as a location or open the restaurant
+                    alertItem = AlertItem(
+                        title: <#T##String#>,
+                        message: String
+                        
+                        
+                    )
+                } else {
+                    alertItem = AlertItem(
+                        title: "Add location",
+                        message: "Would you like to use \(item.name ?? "Unknown place") as the target location?",
+                        delegate: { self.targetLocation = item.location },
+                        cancelDelegate: { }
+                    )
+                }
                 guard let category = item.pointOfInterestCategory else {
                     print("NO CATEGORY!!")
                     alertItem = AlertItem(
@@ -93,8 +105,9 @@ class MapViewModel {
                     )
                     return
                 }
+
                 guard FetchMapItem.foodCategories.contains(category) else {
-                    print("WOORNG CATEGORY!")
+                    print("WRONG CATEGORY!")
                     alertItem = AlertItem(
                         title: "Category invalid",
                         message: "\(item.name ?? "Unknown place") is not a restaurant"

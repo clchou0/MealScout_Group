@@ -19,8 +19,14 @@ class FilterReviewsUseCase {
         self.restaurantRepository = restaurantRepository
     }
     
-    func execute(allReviews: [Review], filter: FilterObject) -> Result<[Restaurant], Error> {
+    func execute(filter: FilterObject) async -> Result<[Restaurant], Error> {
         var filteredRestaurants: [Restaurant] = []
+        let allReviews: [Review]
+        do {
+            allReviews = try await fetchAllReviews()
+        } catch {
+            return .failure(error)
+        }
         
         for review in allReviews {
             if !filteredRestaurants.contains(where: { review.restaurant.id == $0.id})
@@ -31,7 +37,7 @@ class FilterReviewsUseCase {
         return .success(filteredRestaurants)
     }
     
-    func fetchAllReviews() throws -> [Review] {
-        return try reviewRepository.fetchAll()
+    func fetchAllReviews() async throws -> [Review] {
+        return try await reviewRepository.fetchAll()
     }
 }

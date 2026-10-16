@@ -37,5 +37,5 @@ class FetchMapItem {
         }
     }
     
-    static let foodCategories: Set<MKPointOfInterestCategory> = [.restaurant, .cafe, .bakery, .brewery, .winery, .distillery, .nightlife, .foodMarket, .store]
+    static let foodCategories: Set<MKPointOfInterestCategory> = [.restaurant, .cafe, .bakery, .brewery, .winery, .distillery, .nightlife, .foodMarket]
 }

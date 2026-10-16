@@ -45,11 +45,12 @@ struct SeedData {
         guard (try? context.count(for: fetchRequest)) == 0 else { return }
         
         // 1. Raw Seed Data
-        let rawRestaurants: [(id: String, name: String, tags: [CuisineTag])] = [
-            ("I385AFE206B1B222B", "Bar Totti", [.drinksFocused, .country(code: "IT")]),
-            ("IDD69762D766A8A07", "Mr. Wong", [.country(code: "CN")]),
-            ("ID80634E46D93A9F9", "The Meat & Wine Co", [.drinksFocused, .bbq]),
-            ("I857224021BBCC11B", "6HEAD Sydney", [.buffet, .seafood])
+        // , latitude: Double, longitude: Double 
+        let rawRestaurants: [(id: String, name: String, tags: [CuisineTag], lat: Double, lng: Double)] = [
+            ("I385AFE206B1B222B", "Bar Totti", [.drinksFocused, .country(code: "IT")], lat: -33.8664317, lng: 151.2073082),
+            ("IDD69762D766A8A07", "Mr. Wong", [.country(code: "CN")], lat: -33.864107, lng: 151.2079632),
+            ("ID80634E46D93A9F9", "The Meat & Wine Co", [.drinksFocused, .bbq], lat: -33.8638596, lng: 151.2021004),
+            ("I857224021BBCC11B", "6HEAD Sydney", [.buffet, .seafood], lat: -33.8569721, lng: 151.2091577)
         ]
         
         // 2. Build a Lookup Dictionary [MapIdentifier: Restaurant]
@@ -57,7 +58,7 @@ struct SeedData {
         
         for item in rawRestaurants {
             if let identifier = MapIdentifier(rawValue: item.id) {
-                let restaurant = Restaurant(id: identifier, name: item.name, tags: item.tags)
+                let restaurant = Restaurant(id: identifier, name: item.name, tags: item.tags, latitude: item.lat, longitude: item.lng)
                 restaurantMap[item.id] = restaurant
                 do { try restaurantRepository.save(restaurant) }
                 catch { print (error) }

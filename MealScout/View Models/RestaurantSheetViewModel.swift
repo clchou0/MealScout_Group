@@ -18,23 +18,25 @@ class RestaurantSheetViewModel {
     
     init(mapItem: MKMapItem) {
         self.mapItem = mapItem
-        loadReviews()
-        loadTags()
+        Task {
+            await loadReviews()
+            await loadTags()
+        }
     }
     
-    func loadTags() {
+    func loadTags() async {
         if let identifier = mapItem.identifier {
-            self.cuisineTags = useCase.fetchTagsFromRestaurant(mapIdentifier: identifier).sorted{ $0.labelName < $1.labelName }
+            self.cuisineTags = await useCase.fetchTagsFromRestaurant(mapIdentifier: identifier).sorted{ $0.labelName < $1.labelName }
         } else {
             self.cuisineTags = []
         }
     }
     
-    func loadReviews() {
+    func loadReviews() async {
         guard let identifier = mapItem.identifier else {
             self.reviews = []
             return
         }
-        self.reviews = useCase.fetchReviewsFromRestaurant(mapIdentifier: identifier)
+        self.reviews = await useCase.fetchReviewsFromRestaurant(mapIdentifier: identifier)
     }
 }
