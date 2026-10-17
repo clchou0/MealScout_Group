@@ -56,6 +56,14 @@ struct MapView: View {
                 await viewModel.checkForSharedPlace()
                 await viewModel.reloadFilteredRestaurants()
             }
+            locationManager.requestPermissionAccess(onAuthorize: {
+                viewModel.cameraPosition = .userLocation(fallback: .automatic)
+                
+                if let coord = locationManager.currentCoordinate {
+                    viewModel.targetLocationCoordinate = coord
+                }
+            },
+            onUnauthorized: { _ in})
         }
         .onChange(of: scenePhase) { _, phase in
             Task {
@@ -85,46 +93,21 @@ struct MapView: View {
     }
     
     var mapComponent: some View {
-        Map(position: $viewModel.position, selection: $viewModel.selectedFeature) {
+        Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedFeature) {
             UserAnnotation()
             
             ForEach(viewModel.filteredRestaurants) { restaurant in
                 if let item = mapItems[restaurant.id.rawValue] {
-                    let coord = item.location.coordinate
-                    
-                    Annotation(restaurant.name, coordinate: coord, anchor: .bottom) {
-                        VStack(spacing: 0) {
-                            // Pin Head (Bubble)
-                            ZStack {
-                                Circle()
-                                    .fill(.purple)
-                                    .frame(width: 20, height: 20)
-                                
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.white)
-                            }
-                            
-                            // Pin Pointer (Needle Tip)
-                            Image(systemName: "triangle.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 8, height: 6)
-                                .foregroundStyle(.purple)
-                                .rotationEffect(.degrees(180))
-                                .offset(y: -1) // Closes seam with circle
-                            
-                            // Ground Shadow
-                            Ellipse()
-                                .fill(.black.opacity(0.2))
-                                .frame(width: 14, height: 4)
-                                .offset(y: 1)
-                        }
+                    Annotation(restaurant.name, coordinate: item.location.coordinate, anchor: .bottom) {
+                        RestaurantPin()
                         .onTapGesture {
                             viewModel.mapItem = item
                         }
                     }
                 }
+            }
+            Annotation("", coordinate: viewModel.targetLocationCoordinate) {
+                TargetPin()
             }
         }
         .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
@@ -178,7 +161,7 @@ struct MapView: View {
         Button {
             locationManager.requestPermissionAccess(onAuthorize: {
                 withAnimation(.easeInOut(duration: 0.4)) {
-                    viewModel.position = .userLocation(fallback: .automatic)
+                    viewModel.cameraPosition = .userLocation(fallback: .automatic)
                 }
             }, onUnauthorized: { alertItem in
                 viewModel.alertItem = alertItem
@@ -221,6 +204,82 @@ struct MapView: View {
             Capsule().strokeBorder(.black.opacity(0.4), lineWidth: 1.5)
         )
         .fixedSize(horizontal: false, vertical: true)
+    }
+    
+    var customRestaurantPin: some View {
+        VStack(spacing: 0) {
+            // Pin Head (Bubble)
+            ZStack {
+                Circle()
+                    .fill(.purple)
+                    .frame(width: 20, height: 20)
+                
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            
+            // Pin Pointer (Needle Tip)
+            Image(systemName: "triangle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 8, height: 6)
+                .foregroundStyle(.purple)
+                .rotationEffect(.degrees(180))
+                .offset(y: -1) // Closes seam with circle
+            
+            // Ground Shadow
+            Ellipse()
+                .fill(.black.opacity(0.2))
+                .frame(width: 14, height: 4)
+                .offset(y: 1)
+        }
+    }
+}
+
+struct RestaurantPin: View {
+    var color: Color = .purple
+    var icon: String = "star.fill"
+    
+    var body: some View {
+        VStack(spacing: -1) {
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 20, height: 20)
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+            
+            Image(systemName: "triangle.fill")
+                .resizable()
+                .frame(width: 8, height: 6)
+                .rotationEffect(.degrees(180))
+            .foregroundStyle(color)
+            
+            Ellipse()
+                .fill(.black.opacity(0.2))
+                .frame(width: 14, height: 4)
+                .offset(y: 1)
+        }
+    }
+}
+
+struct TargetPin: View {
+    var body: some View {
+        ZStack {
+            // Outer White Ring / Shadow Base
+            Circle()
+                .fill(.white)
+                .frame(width: 20, height: 20)
+                .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
+            
+            // Inner Red Center Dot
+            Circle()
+                .fill(Color.red)
+                .frame(width: 15, height: 15)
+        }
     }
 }
 

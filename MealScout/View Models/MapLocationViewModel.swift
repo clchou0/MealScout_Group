@@ -14,7 +14,11 @@ class MapLocationViewModel: NSObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
 
     var isLocationAuthorized: Bool = false
-
+    var currentCoordinate: CLLocationCoordinate2D? {
+        locationManager.location?.coordinate
+    }
+    
+    
     override init() {
        super.init()
        locationManager.delegate = self
