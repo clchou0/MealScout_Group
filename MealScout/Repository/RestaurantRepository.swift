@@ -132,7 +132,8 @@ final class FirebaseRestaurantRepository: RestaurantRepository {
         return try? document.data(as: Restaurant.self)
     }
     
-    func findOrCreateRestaurant(id: MapIdentifier, restaurantName: String, lat: Double, lng: Double) async throws -> Restaurant {
+    func findOrCreateRestaurant(id: MapIdentifier, restaurantName: String, lat: Double, lng: Double) async throws -> Restaurant
+    {
         if var existing = try await find(by: id) {
             print("Restaurant exists in Firestore: \(restaurantName)")
             existing.name = restaurantName

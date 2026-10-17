@@ -11,6 +11,7 @@ import SwiftUI
 
 @Observable
 class MapViewModel {
+    // TO DO: Set default placement thingy and location to current location (if location access enabled)
     var position: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -33.8688, longitude: 151.2093),
         span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
@@ -68,6 +69,7 @@ class MapViewModel {
         }
     }
     
+    // Check the userdefaults field of shared_place_id, to perform changes according to it (central location or a restaurant)
     func checkForSharedPlace() async {
         print("CHECKING")
         guard let id = UserDefaults(suiteName: "group.MealScout")?.string(forKey: "shared_place_id") else {
@@ -99,14 +101,6 @@ class MapViewModel {
                         cancelDelegate: { }
                     )
                 }
-//                guard let category = item.pointOfInterestCategory else {
-//                    print("NO CATEGORY!!")
-//                    alertItem = AlertItem(
-//                        title: "Category invalid",
-//                        message: "\(item.name ?? "Unknown place") does not have a valid category"
-//                    )
-//                    return
-//                }
             }
         }
         
