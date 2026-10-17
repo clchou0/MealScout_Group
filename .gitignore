@@ -95,3 +95,8 @@ DerivedData/
 # User Data & Local Overrides
 # ==========================================
 *.UserScriptKeychain-KeyValueStore
+
+# ==========================================
+# Xcode Shared Schemes
+# ==========================================
+*.xcodeproj/xcshareddata/xcschemes/
