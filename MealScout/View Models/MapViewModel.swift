@@ -12,7 +12,7 @@ import SwiftUI
 @Observable
 class MapViewModel {
     // TO DO: Set default placement thingy and location to current location (if location access enabled)
-    var position: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(
+    var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -33.8688, longitude: 151.2093),
         span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
     ))
@@ -27,8 +27,8 @@ class MapViewModel {
     let useCase = FilterReviewsUseCase()
     var filteredRestaurants: [Restaurant] = []
     var alertItem: AlertItem? = nil
-    
-    var targetLocation: CLLocation? = nil
+
+    var targetLocationCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: -33.8688, longitude: 151.2093)
     
     init() {
         
@@ -89,7 +89,9 @@ class MapViewModel {
                         title: "Use restaurant or location",
                         message: "Would you like to use \(item.name ?? "Unknown place") as a restaurant or a location basis?",
                         delegate: { self.mapItem = item },
-                        cancelDelegate: { self.targetLocation = item.location },
+                        cancelDelegate: {
+                            self.targetLocationCoordinate = item.location.coordinate
+                        },
                         okLabel: "Restaurant",
                         cancelLabel: "Location"
                     )
@@ -97,12 +99,25 @@ class MapViewModel {
                     alertItem = AlertItem(
                         title: "Use location",
                         message: "Would you like to use \(item.name ?? "Unknown place") as the target location?",
-                        delegate: { self.targetLocation = item.location },
+                        delegate: {
+                            self.targetLocationCoordinate = item.location.coordinate
+                        },
                         cancelDelegate: { }
                     )
                 }
             }
         }
-        
+    }
+    
+    func setTargetAsZoom() {
+        if let camera = cameraPosition.camera {
+            self.targetLocationCoordinate = camera.centerCoordinate
+        } else if let region = cameraPosition.region {
+            self.targetLocationCoordinate = region.center
+        } else if let rect = cameraPosition.rect {
+            self.targetLocationCoordinate = MKCoordinateRegion(rect).center
+        } else if let item = cameraPosition.item {
+            self.targetLocationCoordinate = item.location.coordinate
+        }
     }
 }
