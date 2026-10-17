@@ -12,11 +12,35 @@ struct MapView: View {
     @State var viewModel: MapViewModel = MapViewModel()
     @State var mapItems: [String: MKMapItem] = [:]
     @Environment(\.scenePhase) private var scenePhase
+    @State var locationManager: MapLocationViewModel = MapLocationViewModel()
     
     var body: some View {
-        mapComponent
-        .overlay(alignment: .bottom) {
-            buttonsSection.offset(x: 0, y: -80)
+        ZStack {
+            mapComponent
+            .overlay(alignment: .bottom) {
+                operationsButtonsSection.offset(x: 0, y: -80)
+            }
+            
+            HStack {
+                VStack {
+                    HStack {
+                        accountsToolBar
+                        Spacer()
+                    }
+                    .padding(.leading, 16)
+                    Spacer()
+                }
+            }
+            
+            HStack {
+                Spacer()
+                VStack {
+                    mapButtonsSection
+                    Spacer()
+                }
+            }
+            .padding(.top, 80)
+            .padding(.trailing, 16)
         }
         .sheet(isPresented: $viewModel.presentRestaurantSheet, onDismiss: {
             viewModel.selectedFeature = nil
@@ -105,7 +129,9 @@ struct MapView: View {
         }
         .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
         .mapControls {
-            MapUserLocationButton()
+            HStack {
+                MapCompass()
+            }
         }
         .onChange(of: viewModel.selectedFeature) { _, newValue in
             guard let feature = newValue else { return }
@@ -129,7 +155,43 @@ struct MapView: View {
         }
     }
     
-    var buttonsSection: some View {
+    var accountsToolBar: some View {
+        Button {
+            
+        } label: {
+            Image(systemName: "person")
+                .padding(10)
+                .background(.thinMaterial)
+                .clipShape(Circle())
+        }
+    }
+    
+    var mapButtonsSection: some View {
+        VStack {
+            HStack {
+                currentLocationButton
+            }
+        }
+    }
+    
+    var currentLocationButton: some View {
+        Button {
+            locationManager.requestPermissionAccess(onAuthorize: {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    viewModel.position = .userLocation(fallback: .automatic)
+                }
+            }, onUnauthorized: { alertItem in
+                viewModel.alertItem = alertItem
+            })
+        } label: {
+            Image(systemName: "location")
+                .padding(10)
+                .background(.thinMaterial)
+                .clipShape(Circle())
+        }
+    }
+    
+    var operationsButtonsSection: some View {
         HStack {
             Button {
                 viewModel.presentFilterSheet = true
