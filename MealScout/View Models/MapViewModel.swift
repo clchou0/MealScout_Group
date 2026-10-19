@@ -8,6 +8,7 @@
 import Foundation
 import MapKit
 import SwiftUI
+import CoreLocation
 
 @Observable
 class MapViewModel {
@@ -29,6 +30,7 @@ class MapViewModel {
     var alertItem: AlertItem? = nil
 
     var targetLocationCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: -33.8688, longitude: 151.2093)
+    var selectionModeEnabled: Bool = false
     
     init() {
         
@@ -42,6 +44,7 @@ class MapViewModel {
                 return
             }
             self.mapItem = mapItem
+            self.selectedFeature = nil
         }
     }
     
@@ -87,20 +90,22 @@ class MapViewModel {
                     // Is a restaurant, support usage as a location or open the restaurant
                     alertItem = AlertItem(
                         title: "Use restaurant or location",
-                        message: "Would you like to use \(item.name ?? "Unknown place") as a restaurant or a location basis?",
+                        message: "Would you like to use \(item.name ?? "Unknown place") as a restaurant or a location?",
                         delegate: { self.mapItem = item },
                         cancelDelegate: {
-                            self.targetLocationCoordinate = item.location.coordinate
+                            self.zoomToLocation(item.location.coordinate)
                         },
                         okLabel: "Restaurant",
-                        cancelLabel: "Location"
+                        cancelLabel: "Location",
+                        button3Delegate: { return },
+                        button3Label: "Cancel"
                     )
                 } else {
                     alertItem = AlertItem(
                         title: "Use location",
-                        message: "Would you like to use \(item.name ?? "Unknown place") as the target location?",
+                        message: "Would you like to zoom to \(item.name ?? "Unknown place")?",
                         delegate: {
-                            self.targetLocationCoordinate = item.location.coordinate
+                            self.zoomToLocation(item.location.coordinate)
                         },
                         cancelDelegate: { }
                     )
@@ -118,6 +123,48 @@ class MapViewModel {
             self.targetLocationCoordinate = MKCoordinateRegion(rect).center
         } else if let item = cameraPosition.item {
             self.targetLocationCoordinate = item.location.coordinate
+        }
+    }
+    
+    func handleMapTap(coordinate: CLLocationCoordinate2D?, distance: Double) async {
+        do {
+            try await Task.sleep(for: .milliseconds(500))
+        }
+        catch { print("\(error.localizedDescription)") }
+        
+        guard selectionModeEnabled && !presentRestaurantSheet else { return }
+        
+        guard let targetCoordinate = coordinate else {
+            alertItem = AlertItem(title: "Error", message: "Location scan invalid")
+            return
+        }
+        
+        guard distance <= 2000 else {
+            alertItem = AlertItem(
+                title: "",
+                message: "Zoom in closer to select a location!"
+            )
+            return
+        }
+        
+        alertItem = AlertItem(
+            title: "Change location",
+            message: "Are you sure to change the taget location?",
+            delegate: { self.targetLocationCoordinate = targetCoordinate },
+            cancelDelegate: { }
+        )
+    }
+    
+    func zoomToLocation(_ coordinate: CLLocationCoordinate2D) {
+        withAnimation(.easeInOut(duration: 0.4)) {
+            cameraPosition = .camera(
+                MapCamera(
+                    centerCoordinate: coordinate,
+                    distance: 500, // Distance in meters (street/block level)
+                    heading: 0,
+                    pitch: 0
+                )
+            )
         }
     }
 }

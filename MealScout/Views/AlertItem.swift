@@ -17,6 +17,9 @@ struct AlertItem: Identifiable {
     
     var okLabel: String? = nil
     var cancelLabel: String? = nil
+    
+    var button3Delegate: (() -> Void)? = nil
+    var button3Label: String = ""
 }
 
 ///
@@ -48,6 +51,13 @@ struct AlertItemModifier: ViewModifier {
                 if (item.cancelDelegate != nil) {
                     Button("\(item.cancelLabel ?? "Cancel")") {
                         item.cancelDelegate!()
+                        alertItem = nil
+                    }
+                }
+                
+                if (item.button3Delegate != nil) {
+                    Button(item.button3Label) {
+                        item.button3Delegate!()
                         alertItem = nil
                     }
                 }

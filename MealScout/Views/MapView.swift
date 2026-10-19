@@ -13,6 +13,7 @@ struct MapView: View {
     @State var mapItems: [String: MKMapItem] = [:]
     @Environment(\.scenePhase) private var scenePhase
     @State var locationManager: MapLocationViewModel = MapLocationViewModel()
+    @State var visibleMeters: Double = 0
     
     var body: some View {
         ZStack {
@@ -44,6 +45,7 @@ struct MapView: View {
         }
         .sheet(isPresented: $viewModel.presentRestaurantSheet, onDismiss: {
             viewModel.selectedFeature = nil
+            viewModel.mapItem = nil
         }) {
             if let item = viewModel.mapItem {
                 RestaurantSheet(mapItem: item)
@@ -93,46 +95,57 @@ struct MapView: View {
     }
     
     var mapComponent: some View {
-        Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedFeature) {
-            UserAnnotation()
-            
-            ForEach(viewModel.filteredRestaurants) { restaurant in
-                if let item = mapItems[restaurant.id.rawValue] {
-                    Annotation(restaurant.name, coordinate: item.location.coordinate, anchor: .bottom) {
-                        RestaurantPin()
-                        .onTapGesture {
-                            viewModel.mapItem = item
+        MapReader { proxy in
+            Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedFeature) {
+                UserAnnotation()
+                
+                ForEach(viewModel.filteredRestaurants) { restaurant in
+                    if let item = mapItems[restaurant.id.rawValue] {
+                        Annotation(restaurant.name, coordinate: item.location.coordinate, anchor: .bottom) {
+                            RestaurantPin()
+                            .onTapGesture {
+                                viewModel.mapItem = item
+                            }
                         }
                     }
                 }
+                Annotation("", coordinate: viewModel.targetLocationCoordinate) {
+                    TargetPin()
+                }
             }
-            Annotation("", coordinate: viewModel.targetLocationCoordinate) {
-                TargetPin()
+            .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
+            .mapControls {
+                HStack {
+                    MapCompass()
+                }
             }
-        }
-        .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
-        .mapControls {
-            HStack {
-                MapCompass()
+            .onChange(of: viewModel.selectedFeature) { _, newValue in
+                guard let feature = newValue else { return }
+                
+                guard let category = feature.pointOfInterestCategory else { return }
+                guard FetchMapItem.foodCategories.contains(category) else { return }
+                viewModel.handleChangeFeature(feature: feature)
             }
-        }
-        .onChange(of: viewModel.selectedFeature) { _, newValue in
-            guard let feature = newValue else { return }
-            
-            guard let category = feature.pointOfInterestCategory else { return }
-            guard FetchMapItem.foodCategories.contains(category) else { return }
-            viewModel.handleChangeFeature(feature: feature)
-        }
-        .onChange(of: viewModel.mapItem) { _, newValue in
-            if let newItem = newValue {
-                viewModel.handleChangeMapItem(mapItem: newItem)
+            .onChange(of: viewModel.mapItem) { _, newValue in
+                if let newItem = newValue {
+                    viewModel.handleChangeMapItem(mapItem: newItem)
+                }
             }
-        }
-        .task(id: viewModel.filteredRestaurants) {
-            for restaurant in viewModel.filteredRestaurants {
-                let idString = restaurant.id.rawValue
-                if let mapItem = await FetchMapItem.getByString(from: idString) {
-                    mapItems[idString] = mapItem
+            .task(id: viewModel.filteredRestaurants) {
+                for restaurant in viewModel.filteredRestaurants {
+                    let idString = restaurant.id.rawValue
+                    if let mapItem = await FetchMapItem.getByString(from: idString) {
+                        mapItems[idString] = mapItem
+                    }
+                }
+            }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                self.visibleMeters = context.region.span.latitudeDelta * 111_000
+            }
+            .onTapGesture { screenPoint in
+                let coordinate = proxy.convert(screenPoint, from: .local)
+                Task {
+                    await viewModel.handleMapTap(coordinate: coordinate, distance: visibleMeters)
                 }
             }
         }
@@ -150,10 +163,25 @@ struct MapView: View {
     }
     
     var mapButtonsSection: some View {
-        VStack {
-            HStack {
-                currentLocationButton
-            }
+        HStack {
+            selectModeButton.frame(width: 40)
+            Rectangle()
+                .fill(.black)
+                .frame(maxWidth: 0.4)
+            currentLocationButton.frame(width: 40)
+        }
+        .background(RoundedRectangle(cornerRadius: 10).fill(.thinMaterial))
+            .frame(maxHeight: 40)
+    }
+    
+    var selectModeButton: some View {
+        Button {
+            viewModel.selectionModeEnabled = !viewModel.selectionModeEnabled
+        } label: {
+            Image(systemName: "mappin.circle")
+                .symbolVariant(viewModel.selectionModeEnabled ? .fill : .none)
+                .padding(10)
+                .foregroundStyle(.red)
         }
     }
     
@@ -168,9 +196,9 @@ struct MapView: View {
             })
         } label: {
             Image(systemName: "location")
-                .padding(10)
-                .background(.thinMaterial)
-                .clipShape(Circle())
+//                .padding(10)
+//                .background(.thinMaterial)
+//                .clipShape(Circle())
         }
     }
     
@@ -204,36 +232,6 @@ struct MapView: View {
             Capsule().strokeBorder(.black.opacity(0.4), lineWidth: 1.5)
         )
         .fixedSize(horizontal: false, vertical: true)
-    }
-    
-    var customRestaurantPin: some View {
-        VStack(spacing: 0) {
-            // Pin Head (Bubble)
-            ZStack {
-                Circle()
-                    .fill(.purple)
-                    .frame(width: 20, height: 20)
-                
-                Image(systemName: "star.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-            
-            // Pin Pointer (Needle Tip)
-            Image(systemName: "triangle.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 8, height: 6)
-                .foregroundStyle(.purple)
-                .rotationEffect(.degrees(180))
-                .offset(y: -1) // Closes seam with circle
-            
-            // Ground Shadow
-            Ellipse()
-                .fill(.black.opacity(0.2))
-                .frame(width: 14, height: 4)
-                .offset(y: 1)
-        }
     }
 }
 
@@ -282,6 +280,18 @@ struct TargetPin: View {
         }
     }
 }
+
+//struct popupNote: View {
+//    var present: Bool
+//    var message: String
+//    
+//    var body: some View {
+//        Text(message)
+//            .padding(10)
+//            .background(RoundedRectangle(cornerRadius: 5).fill(.black.opacity(0.6)))
+//            .foregroundStyle(.white)
+//    }
+//}
 
 #Preview {
     MapView()
