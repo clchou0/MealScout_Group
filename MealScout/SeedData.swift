@@ -5,82 +5,85 @@
 //  Created by CLChou on 2026/10/6.
 //
 
-import CoreData
 import MapKit
 import Foundation
 
 struct SeedData {
-    static func clearData(context: NSManagedObjectContext) {
-        let reviewRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "ReviewEntity")
-        let deleteReviewRequest = NSBatchDeleteRequest(fetchRequest: reviewRequest)
-        let restaurantRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "RestaurantEntity")
-        let deleteRestaurantRequest = NSBatchDeleteRequest(fetchRequest: restaurantRequest)
-        
-        do {
-            try context.execute(deleteReviewRequest)
-            try context.execute(deleteRestaurantRequest)
-            
-        } catch {
-            print("\(error)")
-        }
-        
-        do {
-            try context.save()
-            context.reset()
-            print("Shared Core Data context reset complete.")
-            try print("Restaurants: \(CoreDataRestaurantRepository().fetchAll().count)")
-            try print("Reviews: \(CoreDataReviewRepository().fetchAll().count)")
-        } catch {
-            print("Error saving after deletion: \(error)")
-        }
-        
-        
-    }
-    
-    static func seedData(context: NSManagedObjectContext) {
-        let reviewRepository = CoreDataReviewRepository()
-        let restaurantRepository = CoreDataRestaurantRepository()
-        
-        let fetchRequest: NSFetchRequest<RestaurantEntity> = RestaurantEntity.fetchRequest()
-        guard (try? context.count(for: fetchRequest)) == 0 else { return }
-        
-        // 1. Raw Seed Data
-        // , latitude: Double, longitude: Double 
-        let rawRestaurants: [(id: String, name: String, tags: [CuisineTag], lat: Double, lng: Double)] = [
+    // 1. Raw Seed Data
+    static func makeRestaurants() throws -> [Restaurant] {
+        let rows: [(id: String, name: String, tags: [CuisineTag], lat: Double, lng: Double )] = [
             ("I385AFE206B1B222B", "Bar Totti", [.drinksFocused, .country(code: "IT")], lat: -33.8664317, lng: 151.2073082),
             ("IDD69762D766A8A07", "Mr. Wong", [.country(code: "CN")], lat: -33.864107, lng: 151.2079632),
             ("ID80634E46D93A9F9", "The Meat & Wine Co", [.drinksFocused, .bbq], lat: -33.8638596, lng: 151.2021004),
             ("I857224021BBCC11B", "6HEAD Sydney", [.buffet, .seafood], lat: -33.8569721, lng: 151.2091577)
         ]
         
-        // 2. Build a Lookup Dictionary [MapIdentifier: Restaurant]
-        var restaurantMap: [String: Restaurant] = [:]
-        
-        for item in rawRestaurants {
-            if let identifier = MapIdentifier(rawValue: item.id) {
-                let restaurant = Restaurant(id: identifier, name: item.name, tags: item.tags, latitude: item.lat, longitude: item.lng)
-                restaurantMap[item.id] = restaurant
-                do { try restaurantRepository.save(restaurant) }
-                catch { print (error) }
+        return try rows.map { row in
+            guard let id = MapIdentifier(rawValue: row.id) else {
+                throw NSError(domain: "SampleData", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid sample restaurant identifier." ])
             }
+            
+            return Restaurant(id: id, name: row.name, tags: row.tags, latitude: row.lat, longitude: row.lng )
         }
-        
-        
-        let rawReviews = SeedData.getReviewData()
-        for i in 0...3 {
-            if let restaurant = restaurantMap[rawRestaurants[i].id] {
-                for j in 0...2 {
-                    if i * 3 + j >= rawReviews.count { break }
-                    let r = rawReviews[i * 3 + j]
-                    let review = Review(mealOccasion: r.mealOccasion, dishes: r.dishes, numDiners: r.numDiners, totalPrice: r.totalPrice, ratings: r.ratings, description: r.description, usedDeal: r.usedDeal, restaurant: restaurant)
-                    do { try reviewRepository.save(review) }
-                    catch { print(error) }
-                    
-                }
-            }
-        }
-        
     }
+    
+    static func makeReviews(restaurants: [Restaurant]) throws -> [Review] {
+        try getReviewData().enumerated().map { index, row in
+            let rawID = String(format: "00000000-0000-4000-8000-%012d", index + 1)
+            
+            guard let id = UUID(uuidString: rawID), restaurants.indices.contains(index / 3) else {
+                throw NSError(domain: "SampleData", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid sample review mapping."])
+            }
+            
+            return Review(
+                id: id,
+                authorID: "sample-data",
+                isSample: true,
+                mealOccasion: row.mealOccasion,
+                dishes: row.dishes,
+                numDiners: row.numDiners,
+                totalPrice: row.totalPrice,
+                ratings: row.ratings,
+                description: row.description,
+                usedDeal: row.usedDeal,
+                restaurant: restaurants[index / 3]
+            )
+        }
+    }
+    
+    static func uploadData() async throws {
+        let restaurantRepository = FirebaseRestaurantRepository()
+        let reviewRepository = FirebaseReviewRepository()
+
+        let restaurants = try makeRestaurants()
+        let reviews = try makeReviews(restaurants: restaurants)
+
+        let existingRestaurants = try await restaurantRepository.fetchAll()
+        let existingReviews = try await reviewRepository.fetchAll()
+
+        let restaurantIDs = Set(existingRestaurants.map { $0.id.rawValue })
+
+        let reviewIDs = Set(existingReviews.map { $0.id })
+
+        var addedRestaurants = 0
+        var addedReviews = 0
+
+        for restaurant in restaurants {
+            if !restaurantIDs.contains(restaurant.id.rawValue) {
+                try await restaurantRepository.save(restaurant)
+                addedRestaurants += 1
+            }
+        }
+
+        for review in reviews {
+            if !reviewIDs.contains(review.id) {
+                try await reviewRepository.save(review)
+                addedReviews += 1
+            }
+        }
+        print("Firebase added " + "\(addedRestaurants) restaurants and " + "\(addedReviews) reviews.")
+    }
+    
     static func getReviewData() -> [reviewData] {
         return [
             // BAR TOTTI
@@ -206,7 +209,7 @@ struct SeedData {
             )
         ]
     }
-        
+    
     struct reviewData {
         let mealOccasion: MealOccasion
         let dishes: [DishEntry]

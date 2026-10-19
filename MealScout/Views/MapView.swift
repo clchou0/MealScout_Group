@@ -56,7 +56,7 @@ struct MapView: View {
         .onAppear() {
             Task {
                 await viewModel.checkForSharedPlace()
-                await viewModel.reloadFilteredRestaurants()
+                await viewModel.loadFirebaseData()
             }
             locationManager.requestPermissionAccess(onAuthorize: {
                 viewModel.cameraPosition = .userLocation(fallback: .automatic)

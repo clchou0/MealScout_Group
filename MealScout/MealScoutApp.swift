@@ -6,19 +6,22 @@
 //
 
 import SwiftUI
-import CoreData
-import MapKit
+import UIKit
+import FirebaseCore
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        FirebaseApp.configure()
+        return true
+    }
+}
 
 @main
 struct MealScoutApp: App {
-    let persistenceController = PersistenceController.shared
-    init() {
-        let sharedContext = CoreDataStack.shared.context
-        // SeedData.clearData(context: sharedContext)
-        SeedData.seedData(context: sharedContext)
-        
-        print("📁 Database Location: \(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.path)")
-    }
+    @UIApplicationDelegateAdaptor(AppDelegate.self)
+    var appDelegate
+
     var body: some Scene {
         WindowGroup {
             MapView()

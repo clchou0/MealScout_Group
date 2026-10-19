@@ -10,7 +10,7 @@ import MapKit
 
 /// A review object that has all details related to a meal
 
-enum MealOccasion: Hashable, Codable, CaseIterable {
+enum MealOccasion: String, Hashable, Codable, CaseIterable {
     case breakfast, lunch, dinner, brunch, afternoonTea, snack, supper, dessert, beverage, drink, none
     // I would define supper as late night meal
     var label: String {
@@ -65,6 +65,10 @@ struct DishEntry: Identifiable, Codable {
 
 struct Review: Identifiable, Codable {
     let id: UUID
+    var authorID: String
+    let restaurantID: String
+    var isSample: Bool
+    
     var mealOccasion: MealOccasion
     var writtenDate: Date
     
@@ -80,8 +84,11 @@ struct Review: Identifiable, Codable {
     
     let restaurant: Restaurant
     
-    init(mealOccasion: MealOccasion, dishes: [DishEntry], numDiners: Int, totalPrice: Double, ratings: RatingScores, description: String, usedDeal: Deal? = nil, restaurant: Restaurant) {
-        self.id = UUID()
+    init(id: UUID = UUID(), authorID: String = "", isSample: Bool = false, mealOccasion: MealOccasion, dishes: [DishEntry], numDiners: Int, totalPrice: Double, ratings: RatingScores, description: String, usedDeal: Deal? = nil, restaurant: Restaurant) {
+        self.id = id
+        self.authorID = authorID
+        self.restaurantID = restaurant.id.rawValue
+        self.isSample = isSample
         self.mealOccasion = mealOccasion
         self.writtenDate = .now
         self.dishes = dishes
