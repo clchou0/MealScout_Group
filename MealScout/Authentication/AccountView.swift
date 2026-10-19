@@ -51,7 +51,7 @@ struct AccountView: View {
                         if createAccount {
                             SecureField("Confirm password", text: $confirmation)
                                 .textContentType(.newPassword)
-                            Text("Use at least 6 characters. Your project may require a stronger password.")
+                            Text("Use at least 6 characters.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
