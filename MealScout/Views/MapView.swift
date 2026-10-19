@@ -45,6 +45,7 @@ struct MapView: View {
         }
         .sheet(isPresented: $viewModel.presentRestaurantSheet, onDismiss: {
             viewModel.selectedFeature = nil
+            viewModel.mapItem = nil
         }) {
             if let item = viewModel.mapItem {
                 RestaurantSheet(mapItem: item)
@@ -143,7 +144,9 @@ struct MapView: View {
             }
             .onTapGesture { screenPoint in
                 let coordinate = proxy.convert(screenPoint, from: .local)
-                viewModel.handleMapTap(coordinate: coordinate, distance: visibleMeters)
+                Task {
+                    await viewModel.handleMapTap(coordinate: coordinate, distance: visibleMeters)
+                }
             }
         }
     }
@@ -229,36 +232,6 @@ struct MapView: View {
             Capsule().strokeBorder(.black.opacity(0.4), lineWidth: 1.5)
         )
         .fixedSize(horizontal: false, vertical: true)
-    }
-    
-    var customRestaurantPin: some View {
-        VStack(spacing: 0) {
-            // Pin Head (Bubble)
-            ZStack {
-                Circle()
-                    .fill(.purple)
-                    .frame(width: 20, height: 20)
-                
-                Image(systemName: "star.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-            
-            // Pin Pointer (Needle Tip)
-            Image(systemName: "triangle.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 8, height: 6)
-                .foregroundStyle(.purple)
-                .rotationEffect(.degrees(180))
-                .offset(y: -1) // Closes seam with circle
-            
-            // Ground Shadow
-            Ellipse()
-                .fill(.black.opacity(0.2))
-                .frame(width: 14, height: 4)
-                .offset(y: 1)
-        }
     }
 }
 

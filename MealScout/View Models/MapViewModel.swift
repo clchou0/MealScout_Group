@@ -44,6 +44,7 @@ class MapViewModel {
                 return
             }
             self.mapItem = mapItem
+            self.selectedFeature = nil
         }
     }
     
@@ -125,8 +126,14 @@ class MapViewModel {
         }
     }
     
-    func handleMapTap(coordinate: CLLocationCoordinate2D?, distance: Double) {
-        guard selectionModeEnabled else { return }
+    func handleMapTap(coordinate: CLLocationCoordinate2D?, distance: Double) async {
+        do {
+            try await Task.sleep(for: .milliseconds(500))
+        }
+        catch { print("\(error.localizedDescription)") }
+        
+        guard selectionModeEnabled && !presentRestaurantSheet else { return }
+        
         guard let targetCoordinate = coordinate else {
             alertItem = AlertItem(title: "Error", message: "Location scan invalid")
             return
