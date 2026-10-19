@@ -10,6 +10,8 @@
 		209883BA30819C03006F65F7 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 209883B930819C03006F65F7 /* FirebaseFirestore */; };
 		20A77BAF3075FB72008F284D /* AppleMapsShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 20A77BA53075FB71008F284D /* AppleMapsShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		20C2A69F306A15C500F9AE76 /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 20C2A69D306A15C500F9AE76 /* DataModel.xcdatamodeld */; };
+		301B981B3085F30D00876B14 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 301B981A3085F30D00876B14 /* FirebaseAuth */; };
+		301B981D3085F31D00876B14 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 301B981C3085F31D00876B14 /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -117,6 +119,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				209883BA30819C03006F65F7 /* FirebaseFirestore in Frameworks */,
+				301B981D3085F31D00876B14 /* FirebaseCore in Frameworks */,
+				301B981B3085F30D00876B14 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +217,8 @@
 			name = MealScout;
 			packageProductDependencies = (
 				209883B930819C03006F65F7 /* FirebaseFirestore */,
+				301B981A3085F30D00876B14 /* FirebaseAuth */,
+				301B981C3085F31D00876B14 /* FirebaseCore */,
 			);
 			productName = MealScout;
 			productReference = 20C2A5C93062A9A000F9AE76 /* MealScout.app */;
@@ -408,6 +414,7 @@
 				INFOPLIST_FILE = AppleMapsShare/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AppleMapsShare;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -436,6 +443,7 @@
 				INFOPLIST_FILE = AppleMapsShare/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AppleMapsShare;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -585,12 +593,13 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MealScout/Info.plist;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MealScout uses your location to show nearby restaurants on the map";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -619,12 +628,13 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MealScout/Info.plist;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MealScout uses your location to show nearby restaurants on the map";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -649,7 +659,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MealScout.MealScoutTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -670,7 +680,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MealScout.MealScoutTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -690,6 +700,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MealScout.MealScoutUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -709,6 +720,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MealScout.MealScoutUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -788,6 +800,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		301B981A3085F30D00876B14 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		301B981C3085F31D00876B14 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 209883B730819A00006F65F7 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 

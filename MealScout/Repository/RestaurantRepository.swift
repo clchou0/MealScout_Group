@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import CoreData
 import MapKit
+import FirebaseAuth
 import FirebaseFirestore
 // @MainActor
 protocol RestaurantRepository {
@@ -21,140 +21,68 @@ protocol RestaurantRepository {
 }
 
 // @MainActor
-final class CoreDataRestaurantRepository: RestaurantRepository {
-    private let stack: CoreDataStack
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
-
-    init(stack: CoreDataStack = .shared) {
-        self.stack = stack
-    }
-    
-    func fetchAll() throws -> [Restaurant] {
-        let request: NSFetchRequest<RestaurantEntity> = RestaurantEntity.fetchRequest()
-        let entities: [RestaurantEntity] = try stack.context.fetch(request)
-        
-        return try entities.compactMap { entity in
-            guard let data = entity.restaurantData else { return nil }
-            return try decoder.decode(Restaurant.self, from: data)
-        }
-    }
-    
-    func save(_ restaurant: Restaurant) throws {
-        let request: NSFetchRequest<RestaurantEntity> = RestaurantEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", restaurant.id.rawValue)
-        
-        let entity: RestaurantEntity
-        if let existingEntity = try stack.context.fetch(request).first {
-            entity = existingEntity
-        } else {
-            entity = RestaurantEntity(context: stack.context)
-            entity.id = restaurant.id.rawValue
-        }
-        
-        entity.restaurantData = try encoder.encode(restaurant)
-        try stack.save()
-    }
-
-    func delete(id: MapIdentifier) throws {
-        let request: NSFetchRequest<RestaurantEntity> = RestaurantEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id.rawValue)
-
-        if let entity = try stack.context.fetch(request).first {
-            stack.context.delete(entity)
-            try stack.save()
-        }
-    }
-    
-    func find(by id: MapIdentifier) throws -> Restaurant? {
-        let request: NSFetchRequest<RestaurantEntity> = RestaurantEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id.rawValue)
-        
-        guard let entity = try stack.context.fetch(request).first,
-              let data = entity.restaurantData else { return nil }
-        
-        return try? decoder.decode(Restaurant.self, from: data)
-    }
-    
-    func findOrCreateRestaurant(id: MapIdentifier, restaurantName: String, lat: Double, lng: Double) throws -> Restaurant {
-        if var existing = try find(by: id) {
-            print("Restaurant exists")
-            existing.name = restaurantName
-            existing.latitude = lat
-            existing.longitude = lng
-            try save(existing)
-            return existing
-        } else {
-            print("Restaurant \(id.rawValue) added")
-            let newRestaurant = Restaurant(id: id, name: restaurantName, tags: [], latitude: lat, longitude: lng)
-            try save(newRestaurant)
-            return newRestaurant
-        }
-    }
-    
-    func getTagsForRestaurant(id: MapIdentifier) throws -> [CuisineTag] {
-        if let restaurant = try find(by: id) {
-            return restaurant.tags
-        } else { return [] }
-    }
-}
-
 final class FirebaseRestaurantRepository: RestaurantRepository {
-    private let db = Firestore.firestore()
-    private let collectionRef = Firestore.firestore().collection("restaurants")
+    private var collection: CollectionReference {
+        Firestore.firestore().collection("restaurants")
+    }
     
     func fetchAll() async throws -> [Restaurant] {
-        let snapshot = try await collectionRef.getDocuments()
+        let snapshot = try await collection.getDocuments(source: .server)
         
-        return snapshot.documents.compactMap { doc in
-            try? doc.data(as: Restaurant.self)
+        return try snapshot.documents.map {
+            try $0.data(as: Restaurant.self)
         }
     }
     
     func save(_ restaurant: Restaurant) async throws {
-        try collectionRef
+        let data = try Firestore.Encoder().encode(restaurant)
+        
+        try await collection
             .document(restaurant.id.rawValue)
-            .setData(from: restaurant, merge: true)
+            .setData(data)
     }
     
     func delete(id: MapIdentifier) async throws {
-        try await collectionRef
-            .document(id.rawValue)
-            .delete()
+        try await collection.document(id.rawValue).delete()
     }
     
     func find(by id: MapIdentifier) async throws -> Restaurant? {
-        let document = try await collectionRef
+        let snapshot = try await collection
             .document(id.rawValue)
-            .getDocument()
+            .getDocument(source: .server)
         
-        guard document.exists else { return nil }
-        return try? document.data(as: Restaurant.self)
-    }
-    
-    func findOrCreateRestaurant(id: MapIdentifier, restaurantName: String, lat: Double, lng: Double) async throws -> Restaurant
-    {
-        if var existing = try await find(by: id) {
-            print("Restaurant exists in Firestore: \(restaurantName)")
-            existing.name = restaurantName
-            try await save(existing)
-            return existing
-        } else {
-            print("Restaurant \(id.rawValue) added to Firestore")
-            let newRestaurant = Restaurant(id: id, name: restaurantName, tags: [], latitude: lat, longitude: lng)
-            try await save(newRestaurant)
-            return newRestaurant
+        guard snapshot.exists else {
+            return nil
         }
+        
+        return try snapshot.data(as: Restaurant.self)
     }
     
-    func getTagsForRestaurant(id: MapIdentifier) async throws -> [CuisineTag] {
-        if let restaurant = try await find(by: id) {
-            return restaurant.tags
-        } else {
+    func findOrCreateRestaurant(id: MapIdentifier, restaurantName: String, lat: Double, lng: Double) async throws -> Restaurant {
+        if let existing = try await find(by: id) {
+            return existing
+        }
+        
+        let restaurant = Restaurant(
+            id: id,
+            name: restaurantName,
+            tags: [],
+            latitude: lat,
+            longitude: lng
+        )
+        
+        try await save(restaurant)
+        
+        return restaurant
+    }
+    
+    func getTagsForRestaurant(
+        id: MapIdentifier
+    ) async throws -> [CuisineTag] {
+        guard let restaurant = try await find(by: id) else {
             return []
         }
+        
+        return restaurant.tags
     }
-    
-    
 }
-

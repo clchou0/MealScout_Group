@@ -55,6 +55,15 @@ class MapViewModel {
         presentRestaurantSheet = true
     }
     
+    func loadFirebaseData() async {
+        do {
+            try await SeedData.uploadData()
+            await reloadFilteredRestaurants()
+        } catch {
+            alertItem = AlertItem(title: "Firebase error", message: error.localizedDescription)
+        }
+    }
+    
     func reloadFilteredRestaurants() async {
         let result = await useCase.execute(filter: filter)
         switch result {

@@ -39,8 +39,8 @@ class LogReviewUseCase {
     private let reviewRepository: ReviewRepository
     private let restaurantRepository: RestaurantRepository
     
-    init(reviewRepository: ReviewRepository = CoreDataReviewRepository(),
-         restaurantRepository: RestaurantRepository = CoreDataRestaurantRepository()) {
+    init(reviewRepository: ReviewRepository = FirebaseReviewRepository(),
+         restaurantRepository: RestaurantRepository = FirebaseRestaurantRepository()) {
         self.reviewRepository = reviewRepository
         self.restaurantRepository = restaurantRepository
     }
@@ -71,6 +71,7 @@ class LogReviewUseCase {
         do {
             // find restaurant by id key, if not found would create one and geyt back to it
             var foundRestaurant = try await restaurantRepository.findOrCreateRestaurant(id: restaurantIdentifier, restaurantName: restaurantName, lat: lat, lng: lng)
+            foundRestaurant.tags = Array( Set(foundRestaurant.tags + addedRestaurantTags))
             
             let createdReview = Review(
                 mealOccasion: mealOccasion,
@@ -79,6 +80,7 @@ class LogReviewUseCase {
                 totalPrice: totalPrice,
                 ratings: ratings,
                 description: description,
+                usedDeal: usedDeal,
                 restaurant: foundRestaurant
             )
             try await reviewRepository.save(createdReview)

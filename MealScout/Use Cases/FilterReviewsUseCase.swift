@@ -13,8 +13,8 @@ class FilterReviewsUseCase {
     private let reviewRepository: ReviewRepository
     private let restaurantRepository: RestaurantRepository
     
-    init(reviewRepository: ReviewRepository = CoreDataReviewRepository(),
-         restaurantRepository: RestaurantRepository = CoreDataRestaurantRepository()) {
+    init(reviewRepository: ReviewRepository = FirebaseReviewRepository(),
+         restaurantRepository: RestaurantRepository = FirebaseRestaurantRepository()) {
         self.reviewRepository = reviewRepository
         self.restaurantRepository = restaurantRepository
     }
