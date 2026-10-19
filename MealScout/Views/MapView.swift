@@ -13,6 +13,7 @@ struct MapView: View {
     @State var mapItems: [String: MKMapItem] = [:]
     @Environment(\.scenePhase) private var scenePhase
     @State var locationManager: MapLocationViewModel = MapLocationViewModel()
+    @State var visibleMeters: Double = 0
     
     var body: some View {
         ZStack {
@@ -93,47 +94,56 @@ struct MapView: View {
     }
     
     var mapComponent: some View {
-        Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedFeature) {
-            UserAnnotation()
-            
-            ForEach(viewModel.filteredRestaurants) { restaurant in
-                if let item = mapItems[restaurant.id.rawValue] {
-                    Annotation(restaurant.name, coordinate: item.location.coordinate, anchor: .bottom) {
-                        RestaurantPin()
-                        .onTapGesture {
-                            viewModel.mapItem = item
+        MapReader { proxy in
+            Map(position: $viewModel.cameraPosition, selection: $viewModel.selectedFeature) {
+                UserAnnotation()
+                
+                ForEach(viewModel.filteredRestaurants) { restaurant in
+                    if let item = mapItems[restaurant.id.rawValue] {
+                        Annotation(restaurant.name, coordinate: item.location.coordinate, anchor: .bottom) {
+                            RestaurantPin()
+                            .onTapGesture {
+                                viewModel.mapItem = item
+                            }
                         }
                     }
                 }
-            }
-            Annotation("", coordinate: viewModel.targetLocationCoordinate) {
-                TargetPin()
-            }
-        }
-        .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
-        .mapControls {
-            HStack {
-                MapCompass()
-            }
-        }
-        .onChange(of: viewModel.selectedFeature) { _, newValue in
-            guard let feature = newValue else { return }
-            
-            guard let category = feature.pointOfInterestCategory else { return }
-            guard FetchMapItem.foodCategories.contains(category) else { return }
-            viewModel.handleChangeFeature(feature: feature)
-        }
-        .onChange(of: viewModel.mapItem) { _, newValue in
-            if let newItem = newValue {
-                viewModel.handleChangeMapItem(mapItem: newItem)
-            }
-        }
-        .task(id: viewModel.filteredRestaurants) {
-            for restaurant in viewModel.filteredRestaurants {
-                let idString = restaurant.id.rawValue
-                if let mapItem = await FetchMapItem.getByString(from: idString) {
-                    mapItems[idString] = mapItem
+                Annotation("", coordinate: viewModel.targetLocationCoordinate) {
+                    TargetPin()
                 }
+            }
+            .mapStyle(.standard(pointsOfInterest: .including([.restaurant])))
+            .mapControls {
+                HStack {
+                    MapCompass()
+                }
+            }
+            .onChange(of: viewModel.selectedFeature) { _, newValue in
+                guard let feature = newValue else { return }
+                
+                guard let category = feature.pointOfInterestCategory else { return }
+                guard FetchMapItem.foodCategories.contains(category) else { return }
+                viewModel.handleChangeFeature(feature: feature)
+            }
+            .onChange(of: viewModel.mapItem) { _, newValue in
+                if let newItem = newValue {
+                    viewModel.handleChangeMapItem(mapItem: newItem)
+                }
+            }
+            .task(id: viewModel.filteredRestaurants) {
+                for restaurant in viewModel.filteredRestaurants {
+                    let idString = restaurant.id.rawValue
+                    if let mapItem = await FetchMapItem.getByString(from: idString) {
+                        mapItems[idString] = mapItem
+                    }
+                }
+            }
+            .onMapCameraChange(frequency: .onEnd) { context in
+                self.visibleMeters = context.region.span.latitudeDelta * 111_000
+            }
+            .onTapGesture { screenPoint in
+                let coordinate = proxy.convert(screenPoint, from: .local)
+                viewModel.handleMapTap(coordinate: coordinate, distance: visibleMeters)
             }
         }
     }
@@ -150,10 +160,25 @@ struct MapView: View {
     }
     
     var mapButtonsSection: some View {
-        VStack {
-            HStack {
-                currentLocationButton
-            }
+        HStack {
+            selectModeButton.frame(width: 40)
+            Rectangle()
+                .fill(.black)
+                .frame(maxWidth: 0.4)
+            currentLocationButton.frame(width: 40)
+        }
+        .background(RoundedRectangle(cornerRadius: 10).fill(.thinMaterial))
+            .frame(maxHeight: 40)
+    }
+    
+    var selectModeButton: some View {
+        Button {
+            viewModel.selectionModeEnabled = !viewModel.selectionModeEnabled
+        } label: {
+            Image(systemName: "mappin.circle")
+                .symbolVariant(viewModel.selectionModeEnabled ? .fill : .none)
+                .padding(10)
+                .foregroundStyle(.red)
         }
     }
     
@@ -168,9 +193,9 @@ struct MapView: View {
             })
         } label: {
             Image(systemName: "location")
-                .padding(10)
-                .background(.thinMaterial)
-                .clipShape(Circle())
+//                .padding(10)
+//                .background(.thinMaterial)
+//                .clipShape(Circle())
         }
     }
     
@@ -282,6 +307,18 @@ struct TargetPin: View {
         }
     }
 }
+
+//struct popupNote: View {
+//    var present: Bool
+//    var message: String
+//    
+//    var body: some View {
+//        Text(message)
+//            .padding(10)
+//            .background(RoundedRectangle(cornerRadius: 5).fill(.black.opacity(0.6)))
+//            .foregroundStyle(.white)
+//    }
+//}
 
 #Preview {
     MapView()
