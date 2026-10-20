@@ -58,14 +58,16 @@ struct MapView: View {
                 await viewModel.checkForSharedPlace()
                 await viewModel.loadFirebaseData()
             }
-            locationManager.requestPermissionAccess(onAuthorize: {
-                viewModel.cameraPosition = .userLocation(fallback: .automatic)
-                
-                if let coord = locationManager.currentCoordinate {
-                    viewModel.targetLocationCoordinate = coord
-                }
-            },
-            onUnauthorized: { _ in})
+            locationManager.requestPermissionAccess(
+                onAuthorize: {
+                    viewModel.cameraPosition = .userLocation(fallback: .automatic)
+                    
+                    if let coord = locationManager.currentCoordinate {
+                        viewModel.targetLocationCoordinate = coord
+                    }
+                },
+                onUnauthorized: { _ in}
+            )
         }
         .onChange(of: scenePhase) { _, phase in
             Task {
@@ -73,7 +75,11 @@ struct MapView: View {
             }
         }
         
-        .sheet(isPresented: $viewModel.presentFilterSheet) {
+        .sheet(isPresented: $viewModel.presentFilterSheet, onDismiss: {
+            Task {
+                
+            }
+        }) {
             FiltersSheet(filter: $viewModel.filter)
         }
         .onChange(of: viewModel.presentFilterSheet) { _, newValue in
