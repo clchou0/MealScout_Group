@@ -9,6 +9,8 @@ import SwiftUI
 import MapKit
 
 struct LogReviewView: View {
+    @Environment(AccountSession.self) private var session
+    @State private var showAccount = false
     @State var viewModel: LogReviewViewModel
     @Environment(\.dismiss) private var dismiss
     
@@ -113,7 +115,8 @@ struct LogReviewView: View {
             }
             .formStyle(.automatic)
             
-            Button("Submit Review") {
+            Button(session.user == nil ? "Log in to submit review" : "Submit Review") {
+                guard session.user != nil else { showAccount = true; return }
                 Task {
                     await viewModel.submitReview { dismiss() }
                 }
@@ -122,6 +125,7 @@ struct LogReviewView: View {
             .buttonBorderShape(.roundedRectangle(radius: 10))
         }
         .padding(10)
+        .sheet(isPresented: $showAccount) { AccountView().environment(session) }
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }

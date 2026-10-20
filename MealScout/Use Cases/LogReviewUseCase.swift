@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 /// Logging reviews that 
 
 enum LogReviewError: Equatable, LocalizedError {
+    case authenticationRequired
     case invalidMealOccasion
     case dishesEmpty
     case invalidDish
@@ -22,6 +24,7 @@ enum LogReviewError: Equatable, LocalizedError {
     
     var errorDescription: String? {
         switch self {
+        case .authenticationRequired: "Please log in before submitting a review"
         case .invalidMealOccasion: "Please enter when you had the meal"
         case .dishesEmpty: "Please enter at least one dish you had for the meal"
         case .invalidDish: "Please enter corect details for the dishes"
@@ -59,6 +62,7 @@ class LogReviewUseCase {
         lat: Double,
         lng: Double
     ) async -> Result<String, LogReviewError> {
+        guard let authorID = Auth.auth().currentUser?.uid else { return .failure(.authenticationRequired) }
         guard mealOccasion != .none else { return .failure(.invalidMealOccasion) }
         guard numDiners > 0 else { return .failure(.invalidDiners) }
         guard !dishes.isEmpty else { return .failure(.dishesEmpty) }
@@ -74,6 +78,7 @@ class LogReviewUseCase {
             foundRestaurant.tags = Array( Set(foundRestaurant.tags + addedRestaurantTags))
             
             let createdReview = Review(
+                authorID: authorID,
                 mealOccasion: mealOccasion,
                 dishes: dishes,
                 numDiners: numDiners,
