@@ -32,7 +32,7 @@ struct TagSelectorView: View {
     
     var body: some View {
         VStack {
-            TextField("", text: $filter).textFieldStyle(.roundedBorder)
+            TextField("Search a tag...", text: $filter).textFieldStyle(.roundedBorder)
             
             HStack {
                 Picker("", selection: $currentSelection) {
@@ -62,19 +62,19 @@ struct TagSelectorView: View {
                 .foregroundStyle(.blue)
                 .disabled(currentSelection == nil)
             }
-            ScrollView (.horizontal) {
-                HStack (spacing: 5) {
-                    ForEach(newSelectedTags, id: \.self) { tag in
-                        CuisineTagCard(
-                            tag: tag,
-                            delegate: {
-                                newSelectedTags.removeAll(where: { $0 == tag })
-                            }
-                        )
-                    }
+            VStack(spacing: 5){
+                ForEach(newSelectedTags, id: \.self) { tag in
+                    CuisineTagCard(
+                        tag: tag,
+                        delegate: {
+                            newSelectedTags.removeAll(where: { $0 == tag })
+                        }
+                    )
                 }
             }
-            .defaultScrollAnchor(.trailing)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
+            
         }
         .onChange(of: newSelection) {
             // Add the respective value and clear out selection
@@ -97,7 +97,7 @@ struct TagSelectorView: View {
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
                     .lineLimit(1)
-
+                
                 // X Button
                 Button {
                     delegate()
