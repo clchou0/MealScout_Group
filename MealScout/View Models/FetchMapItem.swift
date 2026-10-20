@@ -38,4 +38,20 @@ class FetchMapItem {
     }
     
     static let foodCategories: Set<MKPointOfInterestCategory> = [.restaurant, .cafe, .bakery, .brewery, .winery, .distillery, .nightlife, .foodMarket]
+    
+    static func transportTime(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D, isWalking: Bool) async -> Int? {
+        let request = MKDirections.Request()
+        request.source = MKMapItem(location: CLLocation(latitude: from.latitude, longitude: from.longitude), address: nil)
+        request.destination = MKMapItem(location: CLLocation(latitude: to.latitude, longitude: to.longitude), address: nil)
+        request.transportType = isWalking ? .walking : .transit
+        
+        do {
+            let eta = try await MKDirections(request: request).calculateETA()
+            let mins = Int(eta.expectedTravelTime / 60)
+            return mins <= 20 ? mins : nil
+        } catch {
+            print(error)
+            return nil
+        }
+    }
 }

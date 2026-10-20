@@ -9,6 +9,8 @@ import SwiftUI
 import MapKit
 
 struct MapView: View {
+    @State private var session = AccountSession()
+    @State private var showAccount = false
     @State var viewModel: MapViewModel = MapViewModel()
     @State var mapItems: [String: MKMapItem] = [:]
     @Environment(\.scenePhase) private var scenePhase
@@ -43,6 +45,10 @@ struct MapView: View {
             .padding(.top, 80)
             .padding(.trailing, 16)
         }
+        .environment(session)
+        .sheet(isPresented: $showAccount) {
+            AccountView().environment(session)
+        }
         .sheet(isPresented: $viewModel.presentRestaurantSheet, onDismiss: {
             viewModel.selectedFeature = nil
             viewModel.mapItem = nil
@@ -51,7 +57,8 @@ struct MapView: View {
             }
         }) {
             if let item = viewModel.mapItem {
-                RestaurantSheet(mapItem: item)
+                RestaurantSheet(mapItem: item, targetLocation: viewModel.targetLocationCoordinate)
+                    .environment(session)
                     .cornerRadius(0)
                     .presentationDetents([.large])
             }
@@ -153,12 +160,18 @@ struct MapView: View {
     
     var accountsToolBar: some View {
         Button {
-            
+            showAccount = true
         } label: {
-            Image(systemName: "person")
-                .padding(10)
-                .background(.thinMaterial)
-                .clipShape(Circle())
+            Label(
+                session.user == nil ? "Log in / Sign up" : "My account",
+                systemImage: session.user == nil
+                    ? "person" : "person.crop.circle.fill"
+            )
+            .font(.subheadline.weight(.semibold))
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.regularMaterial, in: Capsule())
         }
     }
     
