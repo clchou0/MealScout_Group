@@ -57,7 +57,7 @@ struct MapView: View {
             }
         }) {
             if let item = viewModel.mapItem {
-                RestaurantSheet(mapItem: item)
+                RestaurantSheet(mapItem: item, targetLocation: viewModel.targetLocationCoordinate)
                     .environment(session)
                     .cornerRadius(0)
                     .presentationDetents([.large])

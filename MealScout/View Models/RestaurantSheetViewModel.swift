@@ -16,11 +16,26 @@ class RestaurantSheetViewModel {
     var reviews: [Review] = []
     var cuisineTags: [CuisineTag] = []
     
-    init(mapItem: MKMapItem) {
+    var walkMins: Int?
+    var transportMins: Int?
+    
+    init(mapItem: MKMapItem, targetLocation: CLLocationCoordinate2D) {
         self.mapItem = mapItem
+        let dest = mapItem.location.coordinate
         Task {
-            await loadReviews()
-            await loadTags()
+            async let reviewLoad: () = loadReviews()
+            async let tagLoad: () = loadTags()
+            
+            _ = await(reviewLoad, tagLoad)
+            
+            async let reviews: () = loadReviews()
+            async let tags: () = loadTags()
+            async let walk = FetchMapItem.transportTime(from: targetLocation, to: dest, isWalking: true)
+            async let drive = FetchMapItem.transportTime(from: targetLocation, to: dest, isWalking: false)
+
+            let (_, _, w, d) = await (reviews, tags, walk, drive)
+            walkMins = w
+            transportMins = d
         }
     }
     

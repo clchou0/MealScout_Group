@@ -5,15 +5,16 @@
 //  Created by CLChou on 2026/9/28.
 //
 
-import SwiftUI
+import Foundation
 import MapKit
+import SwiftUI
 
 struct RestaurantSheet: View {
     @State var viewModel: RestaurantSheetViewModel
     @State private var navigationPath = NavigationPath()
     
-    init(mapItem: MKMapItem) {
-        self.viewModel = RestaurantSheetViewModel(mapItem: mapItem)
+    init(mapItem: MKMapItem, targetLocation: CLLocationCoordinate2D) {
+        self.viewModel = RestaurantSheetViewModel(mapItem: mapItem, targetLocation: targetLocation)
     }
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -21,6 +22,7 @@ struct RestaurantSheet: View {
                 headerSection
                     .background(Color(.systemBackground))
                 tagsBar
+                transitSection
                 
                 Divider()
 
@@ -173,6 +175,30 @@ struct RestaurantSheet: View {
             }
         }
     }
+    
+    func transitBox(icon: String, mins: Int) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+            Text("\(mins) min")
+                .font(.system(size: 15))
+                .dimText()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+    }
+    
+    var transitSection: some View {
+        HStack {
+            Spacer()
+            if let walk = viewModel.walkMins {
+                transitBox(icon: "figure.walk", mins: walk)
+            }
+            if let transit = viewModel.transportMins {
+                transitBox(icon: "bus", mins: transit)
+            }
+            Spacer()
+        }
+    }
 }
 
 #Preview {
@@ -198,5 +224,5 @@ struct RestaurantSheet: View {
     mapItem.url = URL(string: "https://example.com")
     
     // 4. Return your view
-    return RestaurantSheet(mapItem: mapItem)
+    return RestaurantSheet(mapItem: mapItem, targetLocation: coordinate)
 }
