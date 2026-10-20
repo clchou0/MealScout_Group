@@ -6,6 +6,8 @@
 	<dict>
 		<key>AppleMapsShare.xcscheme_^#shared#^_</key>
 		<dict>
+			<key>isShown</key>
+			<false/>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
@@ -13,6 +15,19 @@
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>20A77BA43075FB71008F284D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>20C2A5C83062A9A000F9AE76</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

@@ -91,6 +91,8 @@ class LogReviewUseCase {
             try await reviewRepository.save(createdReview)
             
             foundRestaurant.tags += addedRestaurantTags
+            // Unique tags to ensure nothing comes in multiple times
+            foundRestaurant.tags = Array(Set(foundRestaurant.tags))
             try await restaurantRepository.save(foundRestaurant)
             
             return .success(("Successfully logged review for \(createdReview.mealOccasion) at \(foundRestaurant.name)"))
