@@ -46,6 +46,9 @@ struct MapView: View {
         .sheet(isPresented: $viewModel.presentRestaurantSheet, onDismiss: {
             viewModel.selectedFeature = nil
             viewModel.mapItem = nil
+            Task {
+                await viewModel.reloadFilteredRestaurants()
+            }
         }) {
             if let item = viewModel.mapItem {
                 RestaurantSheet(mapItem: item)
@@ -76,22 +79,13 @@ struct MapView: View {
         }
         
         .sheet(isPresented: $viewModel.presentFilterSheet, onDismiss: {
-            Task {
-                
-            }
+            Task { await viewModel.reloadFilteredRestaurants() }
         }) {
             FiltersSheet(filter: $viewModel.filter)
         }
-        .onChange(of: viewModel.presentFilterSheet) { _, newValue in
-            // Detect if the filter sheet has been collapsed
-            if !newValue {
-                Task {
-                    await viewModel.reloadFilteredRestaurants()
-                }
-                print("restaurants loaded: \(viewModel.filteredRestaurants.count)")
-            }
-        }
-        .sheet(isPresented: $viewModel.presentResultsSheet) {
+        .sheet(isPresented: $viewModel.presentResultsSheet, onDismiss: {
+            Task { await viewModel.reloadFilteredRestaurants() }
+        }) {
             FilterResultsSheet(delegate: { id in
                 viewModel.goToRestaurant(id: id)
             },

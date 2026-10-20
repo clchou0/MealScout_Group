@@ -100,7 +100,7 @@ class MapViewModel {
                     alertItem = AlertItem(
                         title: "Use restaurant or location",
                         message: "Would you like to use \(item.name ?? "Unknown place") as a restaurant or a location?",
-                        delegate: { self.mapItem = item },
+                        delegate: {  self.zoomToLocation(item.location.coordinate); self.mapItem = item; },
                         cancelDelegate: {
                             self.zoomToLocation(item.location.coordinate)
                         },
