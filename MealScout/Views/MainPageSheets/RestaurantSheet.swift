@@ -169,7 +169,9 @@ struct RestaurantSheet: View {
     var reviewsSection: some View {
         ForEach(viewModel.reviews) { review in
             NavigationLink {
-                ReviewFullView(review: review)
+                ReviewFullView(review: review) { deletedID in
+                    viewModel.reviews.removeAll { $0.id == deletedID }
+                }
             } label: {
                 ReviewCard(review: review)
             }

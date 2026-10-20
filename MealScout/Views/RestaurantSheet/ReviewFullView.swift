@@ -6,9 +6,22 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct ReviewFullView: View {
     let review: Review
+    var onDeleted: (UUID) -> Void = { _ in }
+    @Environment(AccountSession.self) private var session
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmDelete = false
+    @State private var deleting = false
+    @State private var deleteError: String?
+
+    private var canDelete: Bool {
+        guard let uid = session.user?.uid else { return false }
+        return !review.isSample && review.authorID == uid
+    }
+
     var discountStr: String {
         guard let deal = review.usedDeal, !deal.isEmpty else { return "" }
         
@@ -34,6 +47,14 @@ struct ReviewFullView: View {
             .padding(.top)
 
             List {
+                if canDelete {
+                    Section {
+                        Button("Delete review", role: .destructive) { confirmDelete = true }
+                            .disabled(deleting)
+                            .accessibilityIdentifier("review.delete")
+                        if deleting { ProgressView("Deleting review…") }
+                    }
+                }
                 // Section 1: Meal Info
                 Section {
                     LabeledContent("Meal Time", value: review.mealOccasion.label)
@@ -141,6 +162,37 @@ struct ReviewFullView: View {
                 }
             }
             .listStyle(.insetGrouped)
+        }
+        .interactiveDismissDisabled(deleting)
+        .navigationBarBackButtonHidden(deleting)
+        .confirmationDialog("Delete this review?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete review", role: .destructive) {
+                Task { await deleteReview() }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This permanently removes your review.")
+        }
+        .alert("Couldn’t delete review", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) { deleteError = nil }
+        } message: {
+            Text(deleteError ?? "Please try again.")
+        }
+    }
+
+    @MainActor private func deleteReview() async {
+        guard !deleting else { return }
+        deleting = true
+        defer { deleting = false }
+        do {
+            try await DeleteReviewUseCase().execute(review: review)
+            onDeleted(review.id)
+            dismiss()
+        } catch {
+            deleteError = error.localizedDescription
         }
     }
 }
