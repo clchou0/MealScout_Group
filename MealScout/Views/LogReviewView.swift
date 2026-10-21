@@ -24,12 +24,18 @@ struct LogReviewView: View {
     
     var body: some View {
         VStack {
-            HStack {
-                Text("Reviewing ")
-                Text(viewModel.restaurantName).fontWeight(.bold)
-            }
-            Form {
+            VStack(spacing: 4) {
+                Text("Write a review")
                 
+                Text(viewModel.restaurantName)
+                    .font(.title3.bold())
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+            
+            Form {
                 Section {
                     mealPicker
                     peopleEntry
@@ -87,7 +93,7 @@ struct LogReviewView: View {
                 
                 Section {
                     TextEditor(text: $viewModel.description)
-                        .frame(minHeight: 150, maxHeight: .infinity)
+                        .frame(minHeight: 100, maxHeight: .infinity)
                 } header: {
                     Text("Comments of your meal")
                         .font(serifFont)
@@ -124,7 +130,7 @@ struct LogReviewView: View {
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.roundedRectangle(radius: 10))
         }
-        .padding(10)
+        //        .padding(10)
         .sheet(isPresented: $showAccount) { AccountView().environment(session) }
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -159,6 +165,8 @@ struct LogReviewView: View {
                 .contentShape(Rectangle())
             }
             .pickerStyle(.menu)
+            
+            Spacer()
         }
     }
     
@@ -179,41 +187,49 @@ struct LogReviewView: View {
             HStack {
                 Text("Source: ").fontWeight(.semibold)
                 TextField("i.e. Eatclub, Uber Eats dine out...", text: dealBinding.redeemSource)
-            }
-            HStack {
-                Text("Discount: ").fontWeight(.semibold)
-                Spacer()
-                
-                TextField("", value: Binding<Int?>(
-                    get: { viewModel.usedDeal.percentOff == 0 ? nil : viewModel.usedDeal.percentOff },
-                    set: { viewModel.usedDeal.percentOff = max(0, $0 ?? 0) }
-                ), format: .number)
-                .labelsHidden()
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 60)
-                Text("% off")
+                    .textFieldStyle(.roundedBorder)
             }
             
-            HStack {
-                Text("or ")
-                Text("Price Discount:").fontWeight(.semibold)
-                Spacer()
+            Text("Discount")
+                .font(.title3)
+            
+            VStack {
+                HStack {
+                    Text("Percentage off:").fontWeight(.semibold)
+                    Spacer()
+                    TextField("", value: Binding<Int?>(
+                        get: { viewModel.usedDeal.percentOff == 0 ? nil : viewModel.usedDeal.percentOff },
+                        set: { viewModel.usedDeal.percentOff = max(0, $0 ?? 0) }
+                    ), format: .number)
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 68)
+                    
+                    Text(" %")
+                }
                 
-                Text("$")
-                TextField("", value: Binding<Double?>(
-                    get: { viewModel.usedDeal.dollarsOff == 0 ? nil : viewModel.usedDeal.dollarsOff },
-                    set: { viewModel.usedDeal.dollarsOff = max(0, (($0 ?? 0) * 100).rounded(.down) / 100) }
-                ), format: .number)
-                .labelsHidden()
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 80)
+                HStack {
+                    Text("Or dollars off:").fontWeight(.semibold)
+                    Spacer()
+                    
+                    TextField("", value: Binding<Double?>(
+                        get: { viewModel.usedDeal.dollarsOff == 0 ? nil : viewModel.usedDeal.dollarsOff },
+                        set: { viewModel.usedDeal.dollarsOff = max(0, (($0 ?? 0) * 100).rounded(.down) / 100) }
+                    ), format: .number)
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 68)
+                    
+                    Text("  $")
+                }
             }
+            .padding(.horizontal, 8)
             
             Text("Brief information: ").fontWeight(.semibold)
-            Text("Time / date restrictions, price requirements...").dimText()
-            TextEditor(text: dealBinding.notes)
+            TextField("Time limits, minimum spends...", text: dealBinding.notes, axis: .vertical)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                .lineLimit(5)
+                .lineLimit(3...5)
+                .textFieldStyle(.roundedBorder)
         }
     }
     
@@ -253,13 +269,16 @@ struct DishRow: View {
     @Binding var dish: DishEntry
     var body: some View {
         VStack {
-            TextField("Dish name: ...", text: $dish.dishName, axis: .vertical)
-                .lineLimit(5)
-                .frame(maxWidth: .infinity)
+            HStack{
+                Text("Dish name: ")
+                TextField("...", text: $dish.dishName, axis: .vertical)
+                    .lineLimit(3)
+                    .frame(maxWidth: .infinity)
+            }
             
-            HStack {
+            HStack() {
                 Text("Price: $")
-                TextField("", value: Binding<Double?>(
+                TextField("0.00", value: Binding<Double?>(
                     get: { dish.price == 0 ? nil : dish.price },
                     set: { dish.price = max(0, $0 ?? 0) }
                 ), format: .number)
@@ -274,6 +293,7 @@ struct DishRow: View {
                 ), format: .number)
                 .labelsHidden()
             }
+            .padding(.vertical, 5)
         }
     }
 }
