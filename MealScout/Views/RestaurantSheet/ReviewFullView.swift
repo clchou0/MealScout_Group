@@ -47,15 +47,7 @@ struct ReviewFullView: View {
             .padding(.top)
 
             List {
-                if canDelete {
-                    Section {
-                        Button("Delete review", role: .destructive) { confirmDelete = true }
-                            .disabled(deleting)
-                            .accessibilityIdentifier("review.delete")
-                        if deleting { ProgressView("Deleting review…") }
-                    }
-                }
-                // Section 1: Meal Info
+               // Section 1: Meal Info
                 Section {
                     LabeledContent("Meal Time", value: review.mealOccasion.label)
                     LabeledContent("Date", value: review.writtenDate.formatted(date: .abbreviated, time: .omitted))
@@ -159,6 +151,15 @@ struct ReviewFullView: View {
                     Text("Ratings")
                         .font(serifFont)
                         .foregroundStyle(.gray)
+                }
+                
+                if canDelete {
+                    Section {
+                        Button("Delete review", role: .destructive) { confirmDelete = true }
+                            .disabled(deleting)
+                            .accessibilityIdentifier("review.delete")
+                        if deleting { ProgressView("Deleting review…") }
+                    }
                 }
             }
             .listStyle(.insetGrouped)

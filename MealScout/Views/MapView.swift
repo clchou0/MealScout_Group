@@ -84,7 +84,11 @@ struct MapView: View {
                 if phase == .active { await viewModel.checkForSharedPlace() }
             }
         }
-        
+        .onChange(of: viewModel.targetLocationCoordinate) { _, _ in
+            Task {
+                await viewModel.reloadFilteredRestaurants()
+            }
+        }
         .sheet(isPresented: $viewModel.presentFilterSheet, onDismiss: {
             Task { await viewModel.reloadFilteredRestaurants() }
         }) {
