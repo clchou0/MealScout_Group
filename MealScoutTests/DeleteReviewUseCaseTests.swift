@@ -1,5 +1,5 @@
 import XCTest
-import MapKit
+internal import MapKit
 @testable import MealScout
 
 @MainActor
@@ -62,6 +62,7 @@ private final class ReviewRepositorySpy: ReviewRepository {
     var shouldFail = false
     func fetchAll() async throws -> [Review] { [] }
     func save(_ review: Review) async throws { }
+    func save(_ review: Review, with restaurant: Restaurant) async throws { }
     func delete(id: UUID) async throws {
         if shouldFail { throw Failure.unavailable }
         deletedIDs.append(id)

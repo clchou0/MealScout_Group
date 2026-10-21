@@ -41,11 +41,14 @@ enum LogReviewError: Equatable, LocalizedError {
 class LogReviewUseCase {
     private let reviewRepository: ReviewRepository
     private let restaurantRepository: RestaurantRepository
+    private let currentUserID: () -> String?
     
     init(reviewRepository: ReviewRepository = FirebaseReviewRepository(),
-         restaurantRepository: RestaurantRepository = FirebaseRestaurantRepository()) {
+         restaurantRepository: RestaurantRepository = FirebaseRestaurantRepository(),
+         currentUserID: @escaping () -> String? = { Auth.auth().currentUser?.uid }) {
         self.reviewRepository = reviewRepository
         self.restaurantRepository = restaurantRepository
+        self.currentUserID = currentUserID
     }
     
     func execute(
@@ -62,7 +65,7 @@ class LogReviewUseCase {
         lat: Double,
         lng: Double
     ) async -> Result<String, LogReviewError> {
-        guard let authorID = Auth.auth().currentUser?.uid else { return .failure(.authenticationRequired) }
+        guard let authorID = currentUserID() else { return .failure(.authenticationRequired) }
         guard mealOccasion != .none else { return .failure(.invalidMealOccasion) }
         guard numDiners > 0 else { return .failure(.invalidDiners) }
         guard !dishes.isEmpty else { return .failure(.dishesEmpty) }
@@ -75,7 +78,8 @@ class LogReviewUseCase {
         do {
             // find restaurant by id key, if not found would create one and geyt back to it
             var foundRestaurant = try await restaurantRepository.findOrCreateRestaurant(id: restaurantIdentifier, restaurantName: restaurantName, lat: lat, lng: lng)
-            foundRestaurant.tags = Array( Set(foundRestaurant.tags + addedRestaurantTags))
+            // Unique tags to ensure nothing comes in multiple times
+            foundRestaurant.tags = Array(Set(foundRestaurant.tags + addedRestaurantTags))
             
             let createdReview = Review(
                 authorID: authorID,
@@ -88,12 +92,7 @@ class LogReviewUseCase {
                 usedDeal: usedDeal,
                 restaurant: foundRestaurant
             )
-            try await reviewRepository.save(createdReview)
-            
-            foundRestaurant.tags += addedRestaurantTags
-            // Unique tags to ensure nothing comes in multiple times
-            foundRestaurant.tags = Array(Set(foundRestaurant.tags))
-            try await restaurantRepository.save(foundRestaurant)
+            try await reviewRepository.save(createdReview, with: foundRestaurant)
             
             return .success(("Successfully logged review for \(createdReview.mealOccasion) at \(foundRestaurant.name)"))
         }

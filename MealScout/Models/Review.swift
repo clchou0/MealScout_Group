@@ -47,8 +47,11 @@ struct Deal: Codable {
     }
     
     var isValid: Bool {
-        if (isEmpty) { return isEmpty }
-        return !redeemSource.isEmpty && (percentOff >= 0 || dollarsOff >= 0.0)    // Fill both discount and source
+        if isEmpty { return true }
+        // Needs a source; each discount must be valid on its own, both can be filled in
+        return !redeemSource.isEmpty
+            && (0...100).contains(percentOff)
+            && dollarsOff >= 0.0
     }
 }
 
