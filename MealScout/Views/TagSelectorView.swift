@@ -66,27 +66,17 @@ struct TagSelectorView: View {
                 .disabled(currentSelection == nil)
             }
             
-            VStack(spacing: 10) {
+            VStack(spacing: 5) {
                 ForEach(newSelectedTags, id: \.self) { tag in
                     CuisineTagCard(
                         tag: tag,
-                        delegate: {
-                            newSelectedTags.removeAll {
-                                $0 == tag
-                            }
-                        }
+                        delegate: {newSelectedTags.removeAll {$0 == tag}}
                     )
-                    .transition(
-                        reduceMotion
-                        ? .identity
-                        : .opacity.combined(
-                            with: .scale(scale: 0.96)
-                        )
-                    )
+                    .transition(reduceMotion ? .identity : .opacity.combined(with: .scale(scale: 0.96)))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, 8)
+            .padding(.top, 5)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: newSelectedTags)
             .sensoryFeedback(.selection, trigger: newSelectedTags.count)
             
