@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import UIKit
 
 struct MapView: View {
     @State private var session = AccountSession()
@@ -16,6 +17,10 @@ struct MapView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State var locationManager: MapLocationViewModel = MapLocationViewModel()
     @State var visibleMeters: Double = 0
+    
+    @AppStorage("isDarkMode") private var isDarkMode = false
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var appearanceSnapshot: UIView?
     
     @Environment(\.accessibilityReduceMotion)
     private var reduceMotion
@@ -48,6 +53,31 @@ struct MapView: View {
             .padding(.top, 80)
             .padding(.trailing, 16)
         }
+        .overlay(alignment: .topTrailing) {
+            Button { changeAppearance() } label: {
+                Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                    .foregroundStyle(.primary)
+                    .frame(width: 44, height: 44)
+                    .background(.regularMaterial, in: Circle())
+                    .contentTransition(UIAccessibility.isReduceMotionEnabled ? .identity : .symbolEffect(.replace))
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 16)
+            .padding(.top, 8)
+        }
+        .onChange(of: colorScheme) { _, _ in
+            if let snapshot = appearanceSnapshot {
+                DispatchQueue.main.async {
+                    UIView.animate(withDuration: 0.35) {
+                        snapshot.alpha = 0
+                    } completion: { _ in
+                        snapshot.removeFromSuperview()
+                        appearanceSnapshot = nil
+                    }
+                }
+            }
+        }
+        
         .environment(session)
         .sheet(isPresented: $showAccount) {
             AccountView().environment(session)
@@ -102,6 +132,24 @@ struct MapView: View {
                                filteredRestaurants: viewModel.filteredRestaurants)
         }
         .resultAlert(alertItem: $viewModel.alertItem)
+    }
+    
+    @MainActor
+    private func changeAppearance() {
+        let window = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)
+
+        if !UIAccessibility.isReduceMotionEnabled,
+           let window,
+           let snapshot = window.snapshotView(afterScreenUpdates: false) {
+            snapshot.frame = window.bounds
+            window.addSubview(snapshot)
+            appearanceSnapshot = snapshot
+        }
+
+        isDarkMode.toggle()
     }
     
     var mapComponent: some View {

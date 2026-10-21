@@ -137,6 +137,8 @@ struct LogReviewView: View {
         }
         .interactiveDismissDisabled()
         .resultAlert(alertItem: $viewModel.alertItem)
+        .sensoryFeedback(.success, trigger: viewModel.successFeedback)
+        .sensoryFeedback(.error, trigger: viewModel.errorFeedback)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
