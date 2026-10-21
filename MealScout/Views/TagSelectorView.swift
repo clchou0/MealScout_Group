@@ -20,6 +20,9 @@ struct TagSelectorView: View {
     
     @State var filter: String = ""
     
+    @Environment(\.accessibilityReduceMotion)
+    private var reduceMotion
+    
     private var filteredTags: [CuisineTag] {
         CuisineTag.allCases.filter { tag in
             let wasNotSelected = !originalSelectedTags.contains(tag)
@@ -62,18 +65,30 @@ struct TagSelectorView: View {
                 .foregroundStyle(.blue)
                 .disabled(currentSelection == nil)
             }
-            VStack(spacing: 5){
+            
+            VStack(spacing: 10) {
                 ForEach(newSelectedTags, id: \.self) { tag in
                     CuisineTagCard(
                         tag: tag,
                         delegate: {
-                            newSelectedTags.removeAll(where: { $0 == tag })
+                            newSelectedTags.removeAll {
+                                $0 == tag
+                            }
                         }
+                    )
+                    .transition(
+                        reduceMotion
+                        ? .identity
+                        : .opacity.combined(
+                            with: .scale(scale: 0.96)
+                        )
                     )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 8)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: newSelectedTags)
+            .sensoryFeedback(.selection, trigger: newSelectedTags.count)
             
         }
         .onChange(of: newSelection) {
