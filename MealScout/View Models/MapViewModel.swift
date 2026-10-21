@@ -65,7 +65,7 @@ class MapViewModel {
     }
     
     func reloadFilteredRestaurants() async {
-        let result = await useCase.execute(filter: filter)
+        let result = await useCase.execute(filter: filter, targetLocation: targetLocationCoordinate)
         switch result {
             case .success(let restaurants): filteredRestaurants = restaurants
             case .failure(let error): print(error)

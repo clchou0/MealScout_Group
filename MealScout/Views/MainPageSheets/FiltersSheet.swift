@@ -107,7 +107,7 @@ struct FiltersSheet: View {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
         .onChange(of: newMealType) { _, newValue in
-            if newValue != .none {
+            if newValue != .none && !filter.selectedMealTypes.contains(newValue) {
                 filter.selectedMealTypes.append(newValue)
                 newMealType = .none
             }
