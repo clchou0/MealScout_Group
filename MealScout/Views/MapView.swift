@@ -296,14 +296,7 @@ struct MapView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
-                //                Text("Filter").font(.system(size: 20))
             }
-            //            .contentShape(Rectangle())
-            //            .frame(width: 150)
-            
-            //            Rectangle()
-            //                .fill(.black)
-            //                .frame(width: 0.5)
             Divider()
                 .frame(height: 24)
             
@@ -321,8 +314,9 @@ struct MapView: View {
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
         .background(.regularMaterial)
+        .cornerRadius(22)
         //        .clipShape(Capsule())
-        .padding(5)
+//        .padding(5)
         .frame(maxWidth: 340)
         .overlay(
             Capsule().strokeBorder(.black.opacity(0.4), lineWidth: 1.5)
