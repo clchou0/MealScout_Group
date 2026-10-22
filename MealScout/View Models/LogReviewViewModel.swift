@@ -36,6 +36,8 @@ class LogReviewViewModel {
     
     var alertItem: AlertItem? = nil
     let useCase: LogReviewUseCase = LogReviewUseCase()
+    var successFeedback = 0
+    var errorFeedback = 0
     
     init(restaurantIdentifier: MapIdentifier, restaurantName: String, lat: Double, lng: Double) {
         self.restaurantIdentifier = restaurantIdentifier
@@ -48,6 +50,7 @@ class LogReviewViewModel {
         }
     }
     
+    @MainActor
     func submitReview(dismiss: @escaping () -> Void) async {
         let result = await useCase.execute(
             mealOccasion: mealOccasion,
@@ -65,8 +68,12 @@ class LogReviewViewModel {
         
         switch (result) {
         case .failure(let error):
-            alertItem = AlertItem(title: "Error", message: error.errorDescription ?? "Unknown...")
+//            alertItem = AlertItem(title: "Error", message: error.errorDescription ?? "Unknown...")
+            errorFeedback += 1
+            alertItem = AlertItem(title: "Error", message: error.errorDescription ?? "Please try again.")
         case .success(let message):
+//            alertItem = AlertItem(title: "Success", message: message, delegate: { dismiss() })
+            successFeedback += 1
             alertItem = AlertItem(title: "Success", message: message, delegate: { dismiss() })
         }
     }
