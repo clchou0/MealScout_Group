@@ -207,20 +207,8 @@ struct RestaurantSheet: View {
     // 1. Create a coordinate
     let coordinate = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
     
-    // 2. Create a placemark with standard address fields
-    let placemark = MKPlacemark(
-        coordinate: coordinate,
-        addressDictionary: [
-            "Name": "Sample Restaurant",
-            "Street": "123 Main St",
-            "City": "San Francisco",
-            "State": "CA",
-            "ZIP": "94105"
-        ]
-    )
-    
-    // 3. Initialize MKMapItem with the placemark
-    let mapItem = MKMapItem(placemark: placemark)
+    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    let mapItem = MKMapItem(location: location, address: nil)
     mapItem.name = "Sample Restaurant"
     mapItem.phoneNumber = "+1 (555) 123-4567"
     mapItem.url = URL(string: "https://example.com")

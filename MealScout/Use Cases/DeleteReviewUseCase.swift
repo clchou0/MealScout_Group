@@ -18,9 +18,9 @@ final class DeleteReviewUseCase {
     private let repository: ReviewRepository
     private let currentUserID: () -> String?
 
-    init(repository: ReviewRepository = FirebaseReviewRepository(),
+    init(repository: ReviewRepository? = nil,
          currentUserID: @escaping () -> String? = { Auth.auth().currentUser?.uid }) {
-        self.repository = repository
+        self.repository = repository ?? FirebaseReviewRepository()
         self.currentUserID = currentUserID
     }
 
