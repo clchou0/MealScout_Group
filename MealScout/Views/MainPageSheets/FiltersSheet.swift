@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FiltersSheet: View {
     @Binding var filter: FilterObject
-    @State var newMealType: MealOccasion?
+    @State var newMealType: MealOccasion = .none
     var body: some View {
         Form {
             Section {
@@ -62,10 +62,10 @@ struct FiltersSheet: View {
             Section {
                 Picker("", selection: $newMealType) {
                     Text("Select a tag...").dimText().font(.system(size: 20))
-                        .tag(MealOccasion?.none)
+                        .tag(MealOccasion.none)
                              
                     ForEach(MealOccasion.allCases, id: \.self) { occasion in
-                        if (filter.selectedMealTypes.contains(occasion)) {
+                        if (occasion != .none && !filter.selectedMealTypes.contains(occasion)) {
                             Text(occasion.label).tag(occasion)
                         }
                     }
@@ -73,12 +73,23 @@ struct FiltersSheet: View {
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                 }
-                if (filter.selectedMealTypes.isEmpty) { Text("Any").dimText() }
-                ForEach (filter.selectedMealTypes, id: \.self) { meal in
-                    Text(meal.label)
-                }
-                
                 .pickerStyle(.menu)
+                
+                if (filter.selectedMealTypes.isEmpty) { Text("Any").dimText() }
+                
+                else {
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 8) {
+                            ForEach (filter.selectedMealTypes, id: \.self) { meal in
+                                MealOccasionCard(
+                                    mealOccasion: meal,
+                                    delegate: { filter.selectedMealTypes.removeAll(where: { $0 == meal }) }
+                                )
+                            }
+                        }
+                    }
+                    .defaultScrollAnchor(.trailing)
+                }
             } header: {
                 Text("Target Meals: ").font(serifFont)
             }
@@ -96,8 +107,9 @@ struct FiltersSheet: View {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
         .onChange(of: newMealType) { _, newValue in
-            if let newMeal = newValue {
-                filter.selectedMealTypes.append(newMeal)
+            if newValue != .none && !filter.selectedMealTypes.contains(newValue) {
+                filter.selectedMealTypes.append(newValue)
+                newMealType = .none
             }
         }
     }
@@ -119,6 +131,42 @@ struct starRatingPicker: View {
                     }
             }
         }
+    }
+}
+
+struct MealOccasionCard: View {
+    var mealOccasion: MealOccasion
+    var delegate: () -> Void
+    var body: some View {
+        HStack(spacing: 8) {
+            // Tag Text
+            Text("\(mealOccasion.label)")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+                .lineLimit(1)
+
+            // X Button
+            Button {
+                delegate()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption2.bold())
+                    .foregroundColor(.secondary)
+                    .padding(4)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.secondarySystemFill))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 

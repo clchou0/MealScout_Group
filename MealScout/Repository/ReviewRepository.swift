@@ -13,6 +13,8 @@ import MapKit
 protocol ReviewRepository {
     func fetchAll() async throws -> [Review]
     func save(_ review: Review) async throws
+    /// Saves the review and its restaurant together: either both are written or neither is
+    func save(_ review: Review, with restaurant: Restaurant) async throws
     func delete(id: UUID) async throws
     func getReviewsForRestaurant(mapIdentifier: MapIdentifier) async throws -> [Review]
 }
@@ -38,6 +40,18 @@ final class FirebaseReviewRepository: ReviewRepository {
         try await collectionRef
             .document(review.id.uuidString)
             .setData(data, merge: true)
+    }
+    
+    func save(_ review: Review, with restaurant: Restaurant) async throws {
+        let batch = db.batch()
+        
+        batch.setData(try Firestore.Encoder().encode(review),
+                      forDocument: collectionRef.document(review.id.uuidString),
+                      merge: true)
+        batch.setData(try Firestore.Encoder().encode(restaurant),
+                      forDocument: db.collection("restaurants").document(restaurant.id.rawValue))
+        
+        try await batch.commit()
     }
     
     func delete(id: UUID) async throws {

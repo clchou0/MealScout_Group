@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import MapKit
 /// Filter all the reviews against the object and returns restaurants that match
 
 class FilterReviewsUseCase {
@@ -19,22 +19,31 @@ class FilterReviewsUseCase {
         self.restaurantRepository = restaurantRepository
     }
     
-    func execute(filter: FilterObject) async -> Result<[Restaurant], Error> {
-        var filteredRestaurants: [Restaurant] = []
+    func execute(filter: FilterObject,
+        targetLocation: CLLocationCoordinate2D) async -> Result<[Restaurant], Error> {
         let allReviews: [Review]
+        
         do {
             allReviews = try await fetchAllReviews()
         } catch {
             return .failure(error)
         }
         
-        for review in allReviews {
-            if !filteredRestaurants.contains(where: { review.restaurant.id == $0.id})
-                    && filter.evaluate(review: review) {
-                filteredRestaurants.append(review.restaurant)
+        var candidateRestaurants: [Restaurant] = []
+        var seenIDs: Set<Restaurant.ID> = []
+        
+        for review in allReviews where filter.evaluate(review: review) {
+            if seenIDs.insert(review.restaurant.id).inserted {
+                candidateRestaurants.append(review.restaurant)
             }
         }
-        return .success(filteredRestaurants)
+        
+        let validRestaurants = candidateRestaurants.filter { restaurant in
+            let from = CLLocation(latitude: targetLocation.latitude, longitude: targetLocation.longitude)
+            let to = CLLocation(latitude: restaurant.latitude, longitude: restaurant.longitude)
+            return from.distance(from: to) <= 1000
+        }
+        return .success(validRestaurants)
     }
     
     func fetchAllReviews() async throws -> [Review] {
