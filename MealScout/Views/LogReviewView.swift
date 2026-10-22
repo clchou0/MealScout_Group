@@ -13,6 +13,7 @@ struct LogReviewView: View {
     @State private var showAccount = false
     @State var viewModel: LogReviewViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var percentageDiscount = true
     
     init(restaurantIdentifier: MapIdentifier, restaurantName: String, lat: Double, lng: Double) {
         self.viewModel = LogReviewViewModel(
@@ -137,6 +138,8 @@ struct LogReviewView: View {
         }
         .interactiveDismissDisabled()
         .resultAlert(alertItem: $viewModel.alertItem)
+        .sensoryFeedback(.success, trigger: viewModel.successFeedback)
+        .sensoryFeedback(.error, trigger: viewModel.errorFeedback)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -154,7 +157,7 @@ struct LogReviewView: View {
     
     var mealPicker: some View {
         HStack {
-            Text("Meal time: ")
+            Text("Meal type: ")
             Spacer()
             Picker("", selection: $viewModel.mealOccasion) {
                 ForEach(MealOccasion.allCases, id: \.self) { occasion in
@@ -193,36 +196,50 @@ struct LogReviewView: View {
             Text("Discount")
                 .font(.title3)
             
-            VStack {
-                HStack {
-                    Text("Percentage off:").fontWeight(.semibold)
-                    Spacer()
-                    TextField("", value: Binding<Int?>(
-                        get: { viewModel.usedDeal.percentOff == 0 ? nil : viewModel.usedDeal.percentOff },
-                        set: { viewModel.usedDeal.percentOff = max(0, $0 ?? 0) }
-                    ), format: .number)
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 68)
-                    
-                    Text(" %")
-                }
-                
-                HStack {
-                    Text("Or dollars off:").fontWeight(.semibold)
-                    Spacer()
-                    
-                    TextField("", value: Binding<Double?>(
-                        get: { viewModel.usedDeal.dollarsOff == 0 ? nil : viewModel.usedDeal.dollarsOff },
-                        set: { viewModel.usedDeal.dollarsOff = max(0, (($0 ?? 0) * 100).rounded(.down) / 100) }
-                    ), format: .number)
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 68)
-                    
-                    Text("  $")
+            Picker("", selection: $percentageDiscount) {
+                Text("Percentage").tag(true)
+                Text("Amount").tag(false)
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: percentageDiscount) { _, isPercentage in
+                if isPercentage {
+                    viewModel.usedDeal.dollarsOff = 0
+                } else {
+                    viewModel.usedDeal.percentOff = 0
                 }
             }
+            
+            HStack {
+                Text(percentageDiscount ? "Percentage off:" : "Dollars off:")
+                    .fontWeight(.semibold)
+
+                if percentageDiscount {
+                    TextField("", value: Binding<Int?>(
+                        get: {
+                            viewModel.usedDeal.percentOff == 0 ? nil : viewModel.usedDeal.percentOff
+                        },
+                        set: {
+                            viewModel.usedDeal.percentOff = min(100, max(0, $0 ?? 0))
+                        }
+                    ), format: .number)
+                    .keyboardType(.numberPad)
+
+                    Text("%")
+                } else {
+                    TextField("", value: Binding<Double?>(
+                        get: {
+                            viewModel.usedDeal.dollarsOff == 0 ? nil : viewModel.usedDeal.dollarsOff
+                        },
+                        set: {
+                            viewModel.usedDeal.dollarsOff = max(0, (($0 ?? 0) * 100).rounded(.down) / 100)
+                        }
+                    ), format: .number)
+                    .keyboardType(.decimalPad)
+
+                    Text("$")
+                }
+            }
+            .textFieldStyle(.roundedBorder)
             .padding(.horizontal, 8)
             
             Text("Brief information: ").fontWeight(.semibold)

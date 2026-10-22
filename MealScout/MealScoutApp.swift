@@ -21,10 +21,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 struct MealScoutApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self)
     var appDelegate
-
+    
+    @AppStorage("isDarkMode") private var isDarkMode = false
+    
     var body: some Scene {
         WindowGroup {
             MapView()
+                .preferredColorScheme(isDarkMode ? .dark : .light)
         }
     }
 }
