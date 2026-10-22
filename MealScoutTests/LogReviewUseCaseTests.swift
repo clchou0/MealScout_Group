@@ -91,6 +91,7 @@ final class DummyRestaurantRepository: RestaurantRepository {
     }
 }
 
+@MainActor
 final class LogReviewUseCaseTests: XCTestCase {
 
     private var reviewRepo: DummyReviewRepository!
@@ -111,11 +112,11 @@ final class LogReviewUseCaseTests: XCTestCase {
         )
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         reviewRepo = nil
         restaurantRepo = nil
         sut = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     func test_execute_success() async {
@@ -178,21 +179,21 @@ final class LogReviewUseCaseTests: XCTestCase {
     /// Calls execute with valid defaults, so each test only overrides the field it checks
     private func execute(
         mealOccasion: MealOccasion = .dinner,
-        dishes: [DishEntry] = [DishEntry(dishName: "Carbonara", price: 20.0, quantity: 1)],
+        dishes: [DishEntry]? = nil,
         numDiners: Int = 1,
         totalPrice: Double = 20.0,
         description: String = "Great pasta!",
-        usedDeal: Deal = Deal(),
+        usedDeal: Deal? = nil,
         addedRestaurantTags: [CuisineTag] = []
     ) async -> Result<String, LogReviewError> {
         await sut.execute(
             mealOccasion: mealOccasion,
-            dishes: dishes,
+            dishes: dishes ?? [DishEntry(dishName: "Carbonara", price: 20.0, quantity: 1)],
             numDiners: numDiners,
             totalPrice: totalPrice,
             ratings: RatingScores(quality: 4.0, price: 4.0, portion: 4.0),
             description: description,
-            usedDeal: usedDeal,
+            usedDeal: usedDeal ?? Deal(),
             restaurantIdentifier: mapID,
             restaurantName: "Bar Totti",
             addedRestaurantTags: addedRestaurantTags,
