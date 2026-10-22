@@ -11,10 +11,20 @@ struct FilterResultsSheet: View {
     var delegate: (_ selectedId: MapIdentifier) -> Void
     var filteredRestaurants: [Restaurant]
     var body: some View {
-        Form {
-            Section {
-                ForEach(filteredRestaurants) { restaurant in
-                    RestaurantCard(restaurant: restaurant, delegate: delegate)
+        Group {
+            if filteredRestaurants.isEmpty {
+                ContentUnavailableView {
+                    Label("No Matching Restaurants", systemImage: "fork.knife")
+                } description: {
+                    Text("No restaurant reviews match your selected filters yet. Try another tag or adjust your filters.")
+                }
+            } else {
+                Form {
+                    Section {
+                        ForEach(filteredRestaurants) { restaurant in
+                            RestaurantCard( restaurant: restaurant, delegate: delegate )
+                        }
+                    }
                 }
             }
         }
