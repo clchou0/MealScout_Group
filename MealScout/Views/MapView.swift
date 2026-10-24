@@ -62,8 +62,7 @@ struct MapView: View {
                     .contentTransition(UIAccessibility.isReduceMotionEnabled ? .identity : .symbolEffect(.replace))
             }
             .buttonStyle(.plain)
-            .padding(.trailing, 16)
-            .padding(.top, 8)
+            .padding(.trailing, 80)
         }
         .onChange(of: colorScheme) { _, _ in
             if let snapshot = appearanceSnapshot {
