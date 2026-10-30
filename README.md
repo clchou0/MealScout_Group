@@ -1,10 +1,10 @@
 # MealScout
 Find meals to fit all your preferences
 
-## About:
+## About
 An iOS native app that helps you find food reviews around you. Filter things based by anything that matters: price, cuisine, area, portion, and everything that users ordered.
 
-## Features:
+## Features
 - Restaurants within 1km distance from your desired location: Import from maps, pin on the screen, or use your current location when location is activated
 - Enable pin mode to select your own location to find restaurants around
 - Filter reviews by prices, portion size, cuisine, anything you care about in a meal
